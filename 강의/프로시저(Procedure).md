@@ -1,7 +1,7 @@
 #MySQL 
 
 --------
-##### 1. 저장 프로시저(Stored Procedure)
+##### 저장 프로시저(Stored Procedure)
 MySQL에서 제공되는 프로그래밍 기능
 쿼리문의 집합(=쿼리 모듈화), 특정 동작을 일괄 처리하기 위한 용도로 사용
 
@@ -22,7 +22,7 @@ DROP PROCEDURE 프로시저 이름;  -- 프로시저 삭제
 
 프로시저 내부에서 사용할 변수 선언 및 할당 가능
 
-다중 분기 활용
+##### 다중 분기 활용
 : IF문, CASE문
 
 ```
@@ -80,7 +80,7 @@ DELIMITER ;
 CALL UserBuyProductList();
 ```
 
-반복문을 구현한 프로시저
+##### 반복문을 구현한 프로시저
 : WHILE ... DO ... END WHILE
 
 ```
@@ -110,5 +110,42 @@ BEGIN
 END $$
 DELIMITER ;
 CALL whileProc();
+```
+
+##### 오류 처리 
+: MySQL은 오류가 발생하면 직접 오류를 처리한다
+`DECLARE 액션 HANDLER FOR (오류조건) (처리할 문장);`
+
+1 에러코드를 통한 오류 처리 
+```
+DELIMITER $$
+CREATE PROCEDURE errortest()
+BEGIN
+	-- 변수 선언 --
+    DECLARE CONTINUE HANDLER FOR 1146 SELECT '존재하지 않는 테이블입니다.' AS '메시지';
+    -- 수행문 --
+    SELECT * FROM noTable;
+
+END $$
+DELIMITER ;
+CALL errortest();
+```
+
+2 SQLException
+```
+DELIMITER $$
+CREATE PROCEDURE errorproc2()
+BEGIN
+	-- 변수 선언 --
+    DECLARE CONTINUE HANDLER FOR sqlexception
+    -- 수행문 --
+    SHOW errors;
+    SELECT '오류가 발생했습니다. 작업은 취소되었습니다.' AS 메시지;
+    ROLLBACK;
+	end;
+    INSERT INTO usertbl VALUES('LSG', '이덕구', 1988, '서울', NULL, NULL, 180, current_date());
+END $$
+DELIMITER ;
+CALL errorproc2();
 ```
 
