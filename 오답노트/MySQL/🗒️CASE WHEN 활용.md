@@ -10,7 +10,6 @@ FROM food_warehouse
 WHERE address LIKE '%경기도%'  
 ORDER BY warehouse_id;
 ```
-CASE WHEN ... THEN ...
-ELSE ... 
-(END AS : 테이블 이름 써서 마무리)
+CASE WHEN ... THEN ... ELSE ...  END
+AS 테이블 이름 써서 마무리
 
