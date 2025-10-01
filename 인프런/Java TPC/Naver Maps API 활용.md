@@ -88,5 +88,69 @@ API 요청 URL
 `while ~ br.close();`
 inputLine으로 읽어들인 한 줄 한 줄을 sb로 append
 
+```
+public static void map_service(String point_x, String point_y, String address) {  
+    String URL_STATICMAP = "https://maps.apigw.ntruss.com/map-static/v2/raster?";  
+    try {  
+               
+        String pos = URLEncoder.encode(point_x + " " + point_y, "UTF-8");  
+        String url = URL_STATICMAP;  
+        // URL에 요소들 결합  
+        url += "center=" + point_x + "," + point_y;  
+        url += "&level=16&w=700&h=500";  
+        url += "&markers=type:t|size:mid|pos:" + pos + "|label:" + URLEncoder.encode(address, "UTF-8");  
+        URL u = new URL(url);  
+        HttpURLConnection con = (HttpURLConnection) u.openConnection();  
+        con.setRequestMethod("GET");  
+        con.setRequestProperty("x-ncp-apigw-api-key-id", clientId);  
+        con.setRequestProperty("x-ncp-apigw-api-key", clientSecret);  
+        int responseCode = con.getResponseCode();  
+        if (responseCode == 200) {  
+            // 사진은 InputStream -> FileOutputStream(바이트)  
+            InputStream is = con.getInputStream();  
+            int read = 0;  
+            byte[] bytes = new byte[1024];  
+            String tempname = Long.valueOf(new Date().getTime()).toString();  
+            File f = new File(tempname + ".jpg");  
+            f.createNewFile();  
+            OutputStream outputStream = new FileOutputStream(f);  
+            while ((read = is.read(bytes)) != -1) {  
+                outputStream.write(bytes, 0, read);  
+            }  
+            is.close();  
+  
+        } else {  
+            br = new BufferedReader((new InputStreamReader(con.getErrorStream())));  
+            String inputLine;  
+            StringBuffer sb = new StringBuffer();  
+            while ((inputLine = br.readLine()) != null) {  
+                sb.append(inputLine);  
+            }  
+            br.close();  
+            System.out.println(sb.toString());  
+        }  
+    } catch (Exception e) {  
+        System.out.println(e);  
+    }  
+}
+```
 
+`url += "center=" + point_x + "," + point_y;`
+`url += "&level=16&w=700&h=500";`
+`url += "&markers=type:t|size:mid|pos:" + pos + "|label:" + URLEncoder.encode(address, "UTF-8");`
+URL 문자열에 필요 요소를 하나씩 이어붙임
+
+`String tempname = Long.valueOf(new Date().getTime()).toString();`
+파일이름은 생성날짜(시간)형식
+
+`f.createNewFile();`
+파일을 생성
+
+`OutputStream outputStream = new FileOutputStream(f);`
+```
+while ((read = is.read(bytes)) != -1) {  
+	outputStream.write(bytes, 0, read);  
+}
+```
+FileOutputStream으로 Byte 단위로 이미지를 불러옴
 
