@@ -124,3 +124,21 @@ for in -> 키를 순회, for of -> 값을 순회
 `shift()` : 배열의 가장 처음 데이터를 추출(배열에서 제거됨)
 
 
+### Function
+함수 표현 방법 2가지
+
+1. 함수 선언문
+	`function name(a, b){ return a + b; }`
+	
+2. 함수 표현식(가장 많이 사용)
+	`let sumNumbers = function (a, b){ return a + b; }`
+
+자바스크립트에서는 함수도 변수나 인자로 취급할 수 있기 때문에 가능
+-> ==일급객체==(first-class citizens)라는 특징.
+
+**함수형 사고와 함수형 프로그래밍**
+
+함수 작성 시 가급적 단일 책임 원칙(SRP: Single Responsibility Principle) 지켜주기
+-> 1개의 함수가 1개의 기능만을 담당하게 설계
+
+
