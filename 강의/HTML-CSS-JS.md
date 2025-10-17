@@ -97,3 +97,21 @@ global.css 파일은 reset.css 파일 import
 }
 ```
 사용할 때는 색상 입력 부분에 `var(--purple)` 처럼 사용
+
+### HTML ~ JS 작업
+Script언어는 순차적으로 작업하므로,
+태그에 속성 등 작업시 script 태그 위치가 중요하다
+(script 속성 지정을 먼저 해버리면 null에 속성을 지정하는 등의 문제가 발생)
+
+좋은 방법은 head에 script 작성하고
+```
+window.onload = function() {
+	// script 내용
+}
+```
+이벤트 핸들러를 이용한 방법이 있다
+
+표준 - script는 밖으로 빼낸다(script.js)
+`<script src="script.js"><script>` 를 head 안에 추가
+
+
