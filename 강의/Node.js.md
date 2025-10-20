@@ -241,3 +241,84 @@ delete.html
 ```
 -> todos의 6번 항목을 삭제
 
+---
+# Axios
+npm에서 비동기 프로그래밍 관련 편의성을 제공하는 Axios 라이브러리
+
+Axios 사용한 데이터 얻어오기
+```
+const axios = require('axios'); // axios 라이브러리 import
+
+const url =
+  'https://raw.githubusercontent.com/wapj/jsbackend/main/movieinfo.json';
+  
+axios
+  .get(url) // GET 요청
+  .then((result) => {
+    if (result.status != 200) {
+      throw new Error('Request Failed!');
+    }
+    if (result.data) {
+      return result.data;
+    }
+    throw new Error('No Data');
+  })
+  .then((data) => {
+    if (!data.articleList || data.articleList.size == 0) {
+      throw new Error('No Movie List');
+    }
+    return data.articleList; // 영화리스트 반환
+  })
+  .then((articles) => {
+    return articles.map((articles, idx) => {
+      return { title: articles.title, rank: idx + 1 };
+    });
+  }) // 영화리스트를 제목과 순위 정보로 분리
+  .then((results) => {
+    // 받은 영화리스트 정보를 출력
+    for (let movieinfo of results) {
+      console.log(`[${movieinfo.rank}위] ${movieinfo.title}`);
+    }
+  })
+  .catch((error) => {
+    console.log('Error Occurred');
+    console.error(error);
+  });
+```
+
+코드가 길어지므로 Async - Await을 사용
+
+```
+const axios = require('axios'); // axios 라이브러리 import
+
+async function getTop20Movies() {
+  const url =
+    'https://raw.githubusercontent.com/wapj/jsbackend/main/movieinfo.json';
+  
+  try {
+    // 네트워크로 데이터를 받아오니까 await 대기
+    const result = await axios.get(url);
+    const { data } = result; // result 값에는 data 프로퍼티가 있음
+    if (!data.articleList || data.articleList.size == 0) {
+      throw new Error('No Data');
+    }
+    const movieinfos = data.articleList.map((article, idx) => {
+      return { title: article.title, rank: idx + 1 };
+    });
+
+  
+    for (let movieinfo of movieinfos) {
+      console.log(`[${movieinfo.rank}위] ${movieinfo.title}`);
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+
+getTop20Movies();
+```
+
+`async function ~ ... const result = await axios.get(...)`
+비동기 작업 수행할 함수 선언하고 결과를 받아올 때까지 대기함
+
+
