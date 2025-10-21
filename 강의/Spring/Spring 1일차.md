@@ -123,6 +123,15 @@ ex) 톰캣, 웹스피어, 웹로직, 제우스, 제이보스
 2. `doPost()` : 실제로 클라이언트가 요청하는 작업을 수행함
 `destroy()` : 서버 종료시 호출됨
 
+##### **서블릿의 상속/구현 관계**
+서블릿의 최상위 클래스 : GenericServlet
+(GenericServlet은 java.lang.Object를 상속받음 - Java에서 최상위 슈퍼클래스)
+
+웹 사이트에 알맞은 서블릿 구현을 도와주는 클래스 : HttpServlet
+-> GenericServlet을 상속받음
+
+GenericServlet은 Servlet, ServletConfig, Serializable을 구현
+
 ## HTML과 Servlet 연결 및 요청-응답
 간단한 로그인 페이지 구현
 
