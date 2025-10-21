@@ -1,4 +1,5 @@
 #Java 
+#Spring
 
 ---
 # Apache Tomcat
@@ -44,16 +45,16 @@ Spring은 주요 모듈들을 통해 기능을 확장, 추가하여 사용한다
 - Jakarta EE 9~11 → Tomcat 10 
 
 ### ! Intellij 환경 설정
-Tomcat 설치 확인하고 새 프로젝트 생성
+==Tomcat 설치 확인하고 새 프로젝트 생성==
 
 버전 확인 : Jakarta EE 8, Tomcat 9.xx
 
-생성 후 상단 Tomcat -> Edit Configurations
+==생성 후 상단 Tomcat -> Edit Configurations==
 	Deployment에서 기존 war 지움, 새로 Artifact 추가 : ~.war (exploded)
 	이후 Application Context를 / 하나 빼고 다 지움
 	=> 주소 부분이 깨끗해짐
 
-한글이 깨질 수 있으므로 UTF-8 설정
+==한글이 깨질 수 있으므로 UTF-8 설정==
 File -> Help -> Edit custom VM options
 	idea64.exe.vmoptions 파일 열림, 내용 입력 :
 		- Xmx2048m
@@ -64,18 +65,41 @@ File -> Help -> Edit custom VM options
 	`-Dfile.encoding=UTF-8` : 파일의 인코딩을 UTF-8로 설정
 	`-Dconsole.encoding=UTF-8` : 콘솔의 인코딩을 UTF-8로 설정
 
-다시 상단 Tomcat -> Edit Configurations 에서 서버 관련 설정
+==다시 상단 Tomcat -> Edit Configurations 에서 서버 관련 설정==
 	Server 메뉴에서 브라우저를 Chrome으로 변경
 	VM options에 `-Dfile.encoding=UTF-8` 입력
 	On 'update' action과 On frame deactivation 모두 `Update classes and resources` 로 변경
 
-Spring framework 라이브러리 추가
+==Spring framework 라이브러리 추가==
 
-
+build.gradle
+```
+dependencies {  
+    compileOnly('javax.servlet:javax.servlet-api:4.0.1')  
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")  
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")  
+    implementation 'org.springframework:spring-core:5.3.27'  
+    implementation 'org.springframework:spring-context:5.3.27'  
+    implementation 'org.springframework:spring-webmvc:5.3.27'  
+    testImplementation 'org.springframework:spring-test:5.3.27'  
+  
+    compileOnly 'org.projectlombok:lombok:1.18.30'  
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'  
+    testCompileOnly 'org.projectlombok:lombok:1.18.30'  
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'  
+    implementation 'org.apache.logging.log4j:log4j-api:2.22.1'  
+    implementation 'org.apache.logging.log4j:log4j-core:2.22.1'  
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.22.1'  
+    // https://mvnrepository.com/artifact/jstl/jstl  
+    implementation 'jstl:jstl:1.2'  
+}
+```
+의존성 추가
+spring-core, spring-context, spring-webmvc, spring-test
+lombok, log4j, jstl
 
 index.jsp
  %@ : 서버에서 실행하는 태그임을 알려줌(서버 디렉티브)
-
   `<%= "Hello World!" %>` : print 함수와 동일
 
 # 서블릿(Servlet)
