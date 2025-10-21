@@ -244,6 +244,7 @@ delete.html
 ---
 # Axios
 npm에서 비동기 프로그래밍 관련 편의성을 제공하는 Axios 라이브러리
+Promise 객체를 실무적으로 사용할 수 있다.
 
 Axios 사용한 데이터 얻어오기
 ```
