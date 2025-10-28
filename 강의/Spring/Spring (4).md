@@ -58,7 +58,7 @@ ApplicationContext
 2. lombok의 @RequiredArgsConstructor 를 통해서 생성자 자동생성
 
 	@Repository는 어노테이션이 붙은 빈이 2개 이상이 될 때 에러 발생
-	때문에 @Primary나 @qualifier("~") 적용
+	때문에 @Primary나 @Qualifier("~") 적용
 
 ==@Qualifier==
 : 이름을 지정하여 특정한 이름의 객체를 주입받는 방식 
@@ -66,6 +66,9 @@ Lombok과 @Qualifier 를 같이 이용하기 위해 src/main/java 폴더에 lomb
 
 lombok.config
 `lombok.copyableAnnotations += org.springframework.beans.factory.annotation.Qualifier`
+
+==@Primary==
+: 동일한 의존성을 가진 객체 중 기본으로 의존성 주입을 할 객체를 지정
 
 web.xml
 WEB-INF폴더에 web.xml listener, context-param 추가
@@ -111,5 +114,121 @@ private DataSource dataSource;
 커넥션만 얻어오면 되고 자동으로 알아서 close 처리 해 준다.
 `Connection conn = dataSource.getConnection();`
 
-
+메서드 이름 정의할 때
+Service는 비즈니스 로직이니까 사용자들이 이해하기 쉬운 이름으로 정의
+ - ex) joinMember, insertMember
+DAO 등 DB 입장에서 처리하는 이름으로 정의하는 것이 좋음
+- ex) findAll(select), edit
 ### JDBC Template
+root-context.xml
+```
+<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">  
+    <property name="dataSource" ref="dataSource"/>  
+</bean>
+
+<!-- transaction도 추가 -->
+<bean id="transactionManager"  
+      class="org.springframework.jdbc.datasource.DataSourceTransactionManager">  
+    <property name="dataSource" ref="dataSource"/>  
+</bean>  
+  
+<!-- @Transactional 활성화 -->  
+<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+```
+
+트랜젝션은 DB에 대한 작업을 할 때 동시에 발생하지 않도록 제어해주는 역할이라고 보면 됨
+
+사용 예시
+
+MemberDAOImplSample.java
+```
+@Primary  
+@Repository  
+@RequiredArgsConstructor  
+public class MemberDAOImplSample implements MemberDAO {  
+    private final JdbcTemplate jdbcTemplate;  
+  
+    private static final RowMapper<Member> MEMBER_ROW_MAPPER = new RowMapper<Member>(){  
+        @Override  
+        public Member mapRow(ResultSet rs, int rowNum) throws SQLException {  
+            Member member = Member.builder()  
+                    .mid(rs.getString("mid"))  
+                    .mpw(rs.getString("mpw"))  
+                    .mname(rs.getString("mname"))  
+                    .build();  
+            return member;  
+        }  
+    };  
+  
+    @Override  
+    public int insertMember(Member member) {  
+        String sql = "insert into member values(?,?,?)";  
+        return jdbcTemplate.update(sql, member.getMid(), member.getMpw(), member.getMname());  
+    }  
+  
+    @Override  
+    public List<Member> printMember() {  
+        String sql = "select * from member order by mid";  
+        return jdbcTemplate.query(sql, MEMBER_ROW_MAPPER);  
+    }  
+}
+```
+
+RowMapper로 테이블의 결과값을 객체(Member)에 자동으로 매핑해줌
+
+일단 코드가 간결해짐
+
+MemberServiceImpl.java
+```
+@Primary  
+@Service  
+@RequiredArgsConstructor  
+public class MemberServiceImplSample implements MemberService {  
+    private final MemberDAO memberDAO;  
+  
+    @Transactional  
+    @Override    
+    public void joinMember(Member member) {  
+        memberDAO.insertMember(member);  
+    }  
+  
+    @Transactional  
+    @Override    
+    public List<Member> memberList() {  
+        return memberDAO.printMember();  
+    }  
+}
+```
+
+필요한 메서드에 ==@Transactional== 표시
+
+MemberServiceImplTest.java
+```
+@ExtendWith(SpringExtension.class)  
+@ContextConfiguration(locations =  
+        {"file:src/main/webapp/WEB-INF/spring/root-context.xml"})  
+public class MemberServiceImplTest {  
+  
+    @Qualifier("memberServiceImplSample")  
+    @Autowired  
+    MemberService memberService;  
+  
+    @Test  
+    @Transactional    
+    @Rollback(false)  
+    void joinMember() {  
+        Member member = Member.builder()  
+                .mid("shinsegae")  
+                .mpw("123456")  
+                .mname("신세계")  
+                .build();  
+        memberService.joinMember(member);  
+    }  
+  
+    @Test  
+    void memberList() {  
+        memberService.memberList().forEach(System.out::println);  
+    }  
+}
+```
+
