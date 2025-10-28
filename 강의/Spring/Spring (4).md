@@ -119,7 +119,7 @@ Service는 비즈니스 로직이니까 사용자들이 이해하기 쉬운 이�
  - ex) joinMember, insertMember
 DAO 등 DB 입장에서 처리하는 이름으로 정의하는 것이 좋음
 - ex) findAll(select), edit
-### JDBC Template
+# JDBC Template
 root-context.xml
 ```
 <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">  
@@ -230,5 +230,40 @@ public class MemberServiceImplTest {
         memberService.memberList().forEach(System.out::println);  
     }  
 }
+```
+
+# Spring Web MVC의 특징
+1. 기존의 MVC구조에서 추가적으로 Front-Controller 패턴 적용
+2. 어노테이션의 적극적인 활용
+3. 파라미터나 리턴 타입에 대한 자유로운 형식
+4. 추상화된 API들의 제공
+
+### DispatcherServlet / Front Controller
+Front Controller 패턴은 모든 요청을 하나의 컨트롤러를 거치는 구조로 일관된 흐름을 작성하는 데 도움이 됨
+-> 스프링 Web MVC에서는 DispatcherServlet이 Front Controller
+
+`Request ----> Front Controller ----> Controller들`
+
+### servlet-context.xml
+: spring-core와 달리 웹과 관련된 처리를 분리하기 위해서 작성하는 설정파일
+반드시 구분할 필요는 없으나 일반적으로 계층별로 분리하는 경우가 많음
+
+servlet-context.xml
+```
+<?xml version="1.0" encoding="UTF-8"?>  
+<beans xmlns="http://www.springframework.org/schema/beans"  
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+       xmlns:context="http://www.springframework.org/schema/context"  
+       xmlns:mvc="http://www.springframework.org/schema/mvc"  
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd">  
+        <!-- 템플릿 엔진 View Resolver -->        <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">  
+            <property name="prefix" value="/WEB-INF/views/"/>  
+            <property name="suffix" value=".jsp"/>  
+        </bean>    
+        <!-- controller 디렉토리 찾기 -->  
+    <context:component-scan base-package="com.ssg.springwebmvc.controller"/>  
+    <mvc:annotation-driven/>  
+    <mvc:resources mapping="/resources/**" location="classpath:/static/"/>  
+</beans>
 ```
 

@@ -1,0 +1,71 @@
+#Java 
+#DB
+
+---
+# MyBatis
+객체 지향 언어인 자바의 관계형 데이터베이스 프로그래밍을 쉽게 도와 주는 개발 프레임 워크
+
+JDBC를 통해 데이터베이스에 엑세스하는 작업을 캡슐화하고 일반 SQL 쿼리, 저장 프로 시저 및 고급 매핑을 지원하며 모든 JDBC 코드 및 매개 변수의 중복작업을 제거 합니다. MyBatis에서는 프로그램에 있는 SQL쿼리들을 한 구성파일에 구성하여 프로그램 코드와 SQL을 분리할 수 있는 장점을 가지고 있습니다.
+
+###### 1. build.gradle 추가
+```
+implementation 'org.springframework:spring-tx:5.3.27'  
+implementation 'org.springframework:spring-jdbc:5.3.27'
+implementation 'org.mybatis:mybatis:3.5.7'
+implementation 'org.mybatis:mybatis-spring:2.0.6'
+```
+
+###### 2. root-context.xml 추가
+```
+<mybatis:scan base-package="com.ssg.springwebmvc.mapper"></mybatis:scan>
+<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">  
+    <property name="dataSource" ref="dataSource"/>  
+</bean>
+```
+SQLSessionFactory 설정 및 MyBatis가 스캔할 디렉토리 지정
+(import : `xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"`)
+
+###### 3. Mapper 인터페이스 작성(쿼리문)
+
+간단한 쿼리문은 인터페이스에 직접 작성
+```
+// DB의 현재 시각을 문자열로 처리하는 메서드 getTimeNow()
+public interface TimeMapper {  
+    @Select("select now()")  
+    String getTimeNow();  
+}
+```
+
+복잡하거나 긴 쿼리문은 xml에서 작성
+```
+public interface TimeMapper2 {  
+    String getNow();  
+}
+```
+
+TimeMapper2.xml
+```
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper  
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+<mapper namespace="com.ssg.springwebmvc.mapper.TimeMapper2">  
+	<-- id와 사용함수명 일치 필요 -->
+    <select id="getNow" resultType="string">  
+        SELECT NOW()  
+    </select>  
+  
+</mapper>
+```
+
+###### 4. root-context에 입력
+```
+<-- sqlSessionFactory 빈 내부에 입력 -->
+	<property name="mapperLocations" value="classpath:/mappers/**/*.xml"/>
+```
+mapper 위치를 지정해줌
+`classpath:/mappers/**/*.xml` : mappers 디렉토리 안의 모든 xml 확장자(중간에 디렉토리 있어도 됨)
+
+
+
+
