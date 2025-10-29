@@ -74,5 +74,46 @@ mapper 위치를 지정해줌
 `classpath:/mappers/**/*.xml` : mappers 디렉토리 안의 모든 xml 확장자(중간에 디렉토리 있어도 됨)
 
 
+### MyBatis Mapper 활용
+resources에 mapper xml 생성
+
+MemberMapper.xml
+```
+<mapper namespace="com.ssg.memberservicetest.mapper.MemberMapper">  
+  
+    <resultMap id="MemberResultMap" type="com.ssg.memberservicetest.dto.MemberDTO">  
+        <id property="userId"    column="userId"/>  
+        <result property="userPwd"   column="userPwd"/>  
+        <result property="userName"  column="userName"/>  
+        <result property="userEmail" column="userEmail"/>  
+        <result property="joinDate"  column="joinDate" jdbcType="DATE" javaType="java.time.LocalDate"/>  
+    </resultMap>  
+  
+    <insert id="insert" parameterType="com.ssg.memberservicetest.dto.MemberDTO">  
+        INSERT INTO member (userId, userPwd, userName, userEmail, joinDate)  
+        VALUES (#{userId}, #{userPwd}, #{userName}, #{userEmail},  
+        #{joinDate, jdbcType=DATE, javaType=java.time.LocalDate})  
+    </insert>  
+  
+     <select id="findAll" resultMap="MemberResultMap">  
+        SELECT userId, userPwd, userName, userEmail, joinDate  
+        FROM member  
+        ORDER BY userId  
+    </select>  
+  
+    <select id="findById" parameterType="string" resultMap="MemberResultMap">  
+        SELECT userId, userPwd, userName, userEmail, joinDate  
+        FROM member  
+        WHERE userId = #{userId}  
+    </select>  
+</mapper>
+```
+mapper의 네임스페이스를 해당 xml 이름으로 지정, 쿼리 작성
+resultMap은 이전에 사용했던 resultSet과 비슷한 역할 -> **쿼리 결과와 DB 테이블 맵핑**
+
+- id : 쿼리를 사용할 메서드명과 같게 해 준다.
+- parameterType : 
+- resultMap : 
+
 
 
