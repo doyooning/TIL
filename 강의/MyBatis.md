@@ -112,8 +112,19 @@ mapper의 네임스페이스를 해당 xml 이름으로 지정, 쿼리 작성
 resultMap은 이전에 사용했던 resultSet과 비슷한 역할 -> **쿼리 결과와 DB 테이블 맵핑**
 
 - id : 쿼리를 사용할 메서드명과 같게 해 준다.
-- parameterType : 
-- resultMap : 
+- parameterType : 쿼리의 파라미터로 넘길 타입을 지정
+- resultMap : resultMap의 id에 지정한 타입 구조로 리턴값을 준다
+- resultType : 쿼리 실행 후 리턴할 타입을 지정
+
+### MyBatis와 스프링을 이용한 영속처리
+MyBatis를 이용해서 SQL을 처리하고 테스트
+
+**개발의단계** 
+- VO 클래스개발 
+- Mapper 인터페이스 개발 
+- XML을 이용해서 SQL 작성 
+- 테스트 코드의 개발
+
 
 
 

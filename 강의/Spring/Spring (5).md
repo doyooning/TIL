@@ -22,8 +22,6 @@ RedirectAttributes는 리다이렉트에 필요한 쿼리 스트링을 구성하
 	문자열의 경우 특별한 사용이 가능 ex) "redirect:/ex06" , "forward: "
 	(forward: 브라우저의 URL은 고정되고 내부적으로 다른 URL로 처리하는 경우 - 잘 사용하지 X)
 
-
-
 ### Spring MVC 예외 처리
 • @ControllerAdvice를 이용해서 처리 
 • 예외에 따라서 @ExceptionHandler를 메서드에 활용
@@ -66,3 +64,25 @@ web.xml의 servlet 태그 안에 추가
 	<load-on-startup>1</load-on-startup>
 ```
 
+
+### ModelMapper 설정과 @Configuration
+스프링은 XML파일을 통한 설정 외에도 ==@Configuration== 이 있는 클래스를 이용해서 설정 지정 가능
+
+ModelMapperConfig.java
+```
+@Configuration 
+public class ModelMapperConfig { 
+	@Bean 
+	public ModelMapper getMapper() { 
+		ModelMapper modelMapper = new ModelMapper(); 
+		modelMapper.getConfiguration() 
+		.setFieldMatchingEnabled(true) 
+		.setFieldAccessLevel(org.modelmapper.config.Configuration.AccessLevel.PRIVATE) 
+		.setMatchingStrategy(MatchingStrategies.LOOSE); 
+	return modelMapper; 
+	} 
+}
+```
+
+### @Valid를 이용한 서버사이드검증
+hibernate-validate 라이브러리를 이용해서 서버사이드에서 검증
