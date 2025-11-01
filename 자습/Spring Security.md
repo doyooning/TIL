@@ -404,4 +404,50 @@ UserDetails를 상속받으면 좀 많은 메서드들을 오버라이딩함
 getAuthorities()는 권한 정보를 가져오는 메서드
 규칙은 거의 정해져 있음
 
+### 세션 정보 얻어오기(ID, 권한)
+로그인 후 Welcome창에 ID를 출력한다던가
+권한 정보를 통해 해당 요청에 대한 권한 검증을 한다던가 할 때 필요
 
+결과값 표시용 main.mustache 
+-> 변수 추가
+```
+<body>  
+main page  
+<hr>  
+{{id}}  
+{{role}}  
+</body>
+```
+`{{id}}` : mustache 문법, model 객체 속성에서 id를 표시
+
+MainController.java
+```
+@GetMapping("/")  
+public String mainP(Model model) {  
+        
+    String id = SecurityContextHolder.getContext().getAuthentication().getName();  
+  
+    // 권한 정보 얻는 로직 -> 권한 필요한 곳에 붙여다 써서 검증하면 됨  
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();  
+    Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();  
+    Iterator<? extends GrantedAuthority> iter = authorities.iterator();  
+    GrantedAuthority auth = iter.next();  
+      
+    String role = auth.getAuthority();  
+  
+    model.addAttribute("id", id);  
+    model.addAttribute("role", role);  
+  
+    return "main";  
+}
+```
+`SecurityContextHolder.getContext().getAuthentication().getName();`
+Spring Security 제공 SecurityContext 관련 기능
+여기서 id와 역할에 해당하는 정보 get -> model 속성으로 전달
+
+정상 결과 : 
+관리자 로그인할 경우
+-> id = admin(가입한 id), role = ROLE_ADMIN
+
+만약 로그인 안 한 사용자(비회원)가 접근하면
+-> id = anonymousUser , role = ROLE_ANONYMOUS
