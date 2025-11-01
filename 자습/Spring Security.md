@@ -7,6 +7,8 @@ https://cafe.naver.com/xxxjjhhh/94
 
 https://spring.io/guides/gs/securing-web
 스프링 시큐리티 공식 문서 가이드
+
+
 ### Spring Security 시작하기
 Spring Initializr(=Spring Boot) 프로젝트 생성
 
@@ -34,4 +36,55 @@ localhost:8080/ 접속하면 로그인창 하나 뜸
 ID : user / PW : 로그창에 발급해준 비밀번호 복붙
 -> main.mustache로 정상 연결
 
+
+### Security Config
+
+
+![](https://cafeptthumb-phinf.pstatic.net/MjAyNTA3MzBfNDgg/MDAxNzUzODE5NDIxOTkx.Q6sDRyh2AMLqf5_6L-GctUuvgvq9RHxtrHH5eGD8Ec8g.qBu1K1RViMaO9KQpBJUSyN1ApQh6Oz3xhefddIieqZAg.PNG/image-34d1339d-51fa-4c6a-aa13-394edf5d47bc.png?type=w1600)
+
+​**인가(Authentication)**
+
+특정한 경로에 요청이 오면 Controller 클래스에 도달하기 전 필터에서 Spring Security가 검증을 함
+
+1. 해당 경로의 접근은 누구에게 열려 있는지
+2. 로그인이 완료된 사용자인지
+3. 해당되는 role을 가지고 있는지
+
+**Security Configuration**
+
+인가 설정을 진행하는 클래스
+(엄밀하게 정의하면 SecurityFilterChain 설정을 진행함)
+
+Securiy Config 클래스 기본 틀
+```
+@Configuration  
+@EnableWebSecurity  
+public class SecurityConfig {  
+    @Bean  
+    public SecurityFilterChain filterChain (HttpSecurity http) throws Exception {  
+        http.authorizeHttpRequests( 
+                (auth) -> auth  
+                        .requestMatchers("/", "/login").permitAll()  
+                        .requestMatchers("/admin").hasRole("ADMIN")  
+                        .requestMatchers("/my/**").hasAnyRole("USER", "ADMIN")  
+                        .anyRequest().authenticated()  
+        );  
+        return http.build();  
+    }  
+}
+```
+
+==@Configuration== + ==@EnableWebSecurity== -> Spring이 Security Config 클래스로 인식함
+내부에 메서드는 SecurityFilterChain 타입을 반환
+
+로직은 정형화된 구조라서 기본 틀 그대로 참조해서 역할, 권한 범위에 따라 수정해주면 됨
+
+상단부터 순차 실행 
+-> 동일한 요청을 맨 위에서 permitAll 하면 밑에는 소용없다 
+
+`.requestMatchers("/", "/login").permitAll()`
+: 메인 페이지, 로그인 페이지는 모두에게
+
+`.anyRequest().authenticated()`
+: 위 요청 외에는 인가된 사용자만
 
