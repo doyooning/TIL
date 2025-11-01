@@ -13,7 +13,29 @@ https://spring.io/guides/gs/securing-web
 Spring Initializr(=Spring Boot) 프로젝트 생성
 
 의존성 추가 : Spring Web, Lombok, Mustache, Spring Security, Spring Data JPA, MySQL Driver
-(Mustache는 뷰 템플릿 역할)
+(Mustache는 템플릿 엔진 역할)
+
+###### Thymeleaf나 Mustache같은 템플릿 엔진 사용 이유?
+⚠️ 템플릿 엔진 없이 HTML만 사용할 때 주의할 점
+
+- **동적 데이터 바인딩 불가**: 서버에서 사용자 이름, 권한 등 동적 삽입 데이터를 HTML에 직접 넣을 수 없음
+- **보안 관련 처리 어려움**: Spring Security의 `sec:authorize` 같은 태그를 사용하려면 Thymeleaf가 필요함
+- **폼 처리 불편**: 서버에서 폼 데이터를 처리하고 다시 보여주는 작업이 번거로움
+
+✨ 템플릿 엔진을 쓰면 좋은 점
+
+- Thymeleaf / Mustache 사용 시
+	동적 데이터 삽입 : 가능(`th:text`, `{{name}}`)
+	인증/권한 기반 뷰 제어 : 가능(`sec:authorize`)
+	폼 처리 : 편리(`th:field`, `th:object`)
+	유지보수 : 템플릿 구조로 관리 용이
+
+- HTML만 사용할 때
+	동적 데이터 삽입 : 불가능
+	인증/권한 기반 뷰 제어 : 불가능
+	폼 처리 : 수동 처리 필요
+	유지보수 : 반복되는 HTML 수동 관리
+
 
 controller / MainController.java 생성
 @Controller 해주고 안에 @GetMapping으로 메서드 아무거나 만들어줌
