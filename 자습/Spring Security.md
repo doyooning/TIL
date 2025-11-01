@@ -326,6 +326,82 @@ UserRepository에 중복 검사 메서드 정의
 다만 백엔드단에서 다 구현해놓으면 코드가 복잡해지니까
 프론트단에서는 정규식 활용으로 함
 
+### DB 기반 로그인 검증 로직
+**인증**
+시큐리티를 통해 인증을 진행하는 방법 :
+사용자가 Login 페이지를 통해 아이디, 비밀번호를 POST 요청
+-> 스프링 시큐리티가 데이터베이스에 저장된 회원 정보를 조회 후 비밀번호를 검증
+-> 서버 세션 저장소에 해당 아이디에 대한 세션을 저장
 
+UserRepository에 추가: `UserEntity findByUsername(String username);`
+=> 이름으로 객체 찾기
+
+UserDetailsService 인터페이스를 통해서 사용자 정보를 가져와야 함
+우리가 자체적으로 아이디 중복 검사 로직을 만들 것이므로 인터페이스 구현체를 만들어줌
+-> CustomUserDetailsService.java
+```
+@Service  
+public class CustomUserDetailsService implements UserDetailsService {  
+  
+    @Autowired  
+    private UserRepository userRepository;  
+  
+    @Override  
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {  
+  
+        UserEntity userEntity = userRepository.findByUsername(username);  
+  
+        if (userEntity != null) {  
+            return new CustomUserDetails(userEntity);  
+        }  
+  
+        return null;  
+    }  
+}
+```
+사용자 이름(ID)으로 Entity 정보를 가져옴
+Entity가 null이 아니면 CustomUserDetails 객체에 userEntity를 넘김
+
+CustomUserDetails.java
+```
+public class CustomUserDetails implements UserDetails {  
+    private UserEntity userEntity;  
+  
+    public CustomUserDetails(UserEntity userEntity) {  
+        this.userEntity = userEntity;  
+    }  
+    
+    @Override  
+    public Collection<? extends GrantedAuthority> getAuthorities() {  
+        // 권한 관련  
+        Collection<GrantedAuthority> authorities = new ArrayList<>();  
+        authorities.add(new GrantedAuthority() {  
+            @Override  
+            public String getAuthority() {  
+                return userEntity.getRole();  
+            }  
+        });  
+  
+        return authorities;  
+    }  
+  
+    @Override  
+    public String getPassword() {  
+        return userEntity.getPassword();  
+    }  
+  
+    @Override  
+    public String getUsername() {  
+        return userEntity.getUsername();  
+    }
+    ...
+}    
+```
+UserDetails를 상속받으면 좀 많은 메서드들을 오버라이딩함
+지금 구현할 수 있는 부분만 구현하고(return값 준다)
+나머지는 false 리턴하면 계정이 잠기므로 true로 다 바꿔준다.
+
+getAuthorities()는 권한 정보를 가져오는 메서드
+규칙은 거의 정해져 있음
 
 
