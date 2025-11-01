@@ -110,3 +110,222 @@ public class SecurityConfig {
 `.anyRequest().authenticated()`
 : 위 요청 외에는 인가된 사용자만
 
+### Login 페이지 생성
+
+**Config 설정 후 로그인 페이지**
+
+스프링 시큐리티 Config 클래스 설정 후 특정 경로에 대한 접근 권한이 없는 경우,
+자동으로 로그인 페이지로 리다이렉팅 되지 않고 오류 페이지가 발생한다.
+
+위 문제를 해결하기 위해 Config 클래스를 설정하면 로그인 페이지 설정도 진행해야 한다.
+```
+<form action="/loginProc" method="post" name="loginForm">  
+    <input id="username" type="text" name="username" placeholder="id"/>  
+    <input id="password" type="password" name="password" placeholder="password"/>  
+    <input type="submit" value="login"/>  
+</form>
+```
+로그인 폼을 만들어준다.
+
+Config에 로그인 페이지에 대한 설정 진행
+```
+http.formLogin((auth) -> auth.loginPage("/login") // 로그인 페이지를 연결해줌  
+                .loginProcessingUrl("/loginProc") // 로그인이 완료되면 연결할 페이지  
+                .permitAll() // 로그인되면 permitAll 상태  
+
+http.csrf((auth) -> auth.disable()); // CSRF는 잠시 비활성화
+);
+```
+
+
+### Security 암호화
+스프링 시큐리티는 사용자 인증(로그인)시 비밀번호에 대해 단방향 해시 암호화를 진행,
+저장되어 있는 비밀번호와 대조한다.
+
+따라서 회원가입시 비밀번호 항목에 대해서 암호화를 진행해야 한다.
+
+스프링 시큐리티는 암호화를 위해 BCrypt Password Encoder를 제공하고 권장한다. 따라서 해당 클래스를 return하는 메소드를 만들어 @Bean으로 등록하여 사용하면 된다.
+
+###### 단방향 해시 암호화
+
+**- 양방향**
+- 대칭키
+- 비대칭키
+**- 단방향**
+- 해시
+
+SecurifyConfig.java에 추가
+```
+...
+@Bean  
+public BCryptPasswordEncoder bCryptPasswordEncoder() {  
+    return new BCryptPasswordEncoder();  
+}
+...
+```
+앞으로 작업할 때 비밀번호는 계속 암호화 필요
+어디서든 패스워드 인코더 메서드를 호출하면 된다.
+
+### DB 종료와 ORM
+
+**데이터베이스 종류와 ORM**
+
+회원 정보를 저장하기 위한 데이터베이스는 MySQL 엔진의 데이터베이스를 사용한다. 
+DB 접근은 Spring Data JPA를 사용한다.
+
+![](https://cafeptthumb-phinf.pstatic.net/MjAyNTA3MzBfODYg/MDAxNzUzODIxMDYwOTc2.WwS5iPVKzmIN8RUOROz-cyRAF6jLleLCRfpblT-AyHkg.ImTc6pU0TQormIhRwqQ2WO51x2BQKWG9YaOBMfk68SIg.PNG/image-0eafa548-c244-4fc8-a9a2-e5c17f0954e8.png?type=w1600)
+DB 접근을 위해 build.gradle에서 다시 의존성 2개(spring data랑 mysql connector)해제 필요
+join = 회원가입
+
+### DB 연결
+application.properties에 datasource 정보 넣어준다.
+
+### 회원가입(join) 구현
+
+회원가입 페이지 생성(join.mustache)
+```
+...
+<form action="/joinProc" method="post" name="joinForm">  
+    <input type="text" name="username" placeholder="Username"/>  
+    <input type="password" name="password" placeholder="Password"/>  
+    <input type="submit" value="Join"/>  
+</form>
+...
+```
+
+JoinDTO 객체 생성
+간단하게 회원가입시 입력받을 데이터(ID, PW) 정의
+```
+@Setter  
+@Getter  
+public class JoinDTO {  
+    private String username;  
+    private String password;  
+}
+```
+
+JoinController 생성
+```
+...
+@Autowired  
+private JoinService joinService;  
+// 지금은 간편하게 필드 주입 방식, 생성자 방식으로 하는 걸 권장  
+  
+@GetMapping("/join")  
+public String joinP() {  
+  
+    return "join";  
+}  
+  
+  
+@PostMapping("/joinProc")  
+public String joinProcess(JoinDTO joinDTO) {  
+  
+    System.out.println(joinDTO.getUsername());  
+  
+    joinService.joinProcess(joinDTO);  
+  
+    return "redirect:/login";  
+}
+```
+GET으로 /join 
+-> join페이지, 폼 작성 
+-> POST로 /joinProc 
+-> joinProcess 후 /login으로 리디렉트
+
+joinProcess에서 수행할 로직 구현
+=> joinService 생성
+
+```
+@Autowired  
+private UserRepository userRepository;  
+  
+@Autowired  
+private BCryptPasswordEncoder bCryptPasswordEncoder;  
+  
+public void joinProcess(JoinDTO joinDTO) {  
+    UserEntity data = new UserEntity();  
+  
+    data.setUsername(joinDTO.getUsername());  
+    data.setPassword(bCryptPasswordEncoder.encode(joinDTO.getPassword()));  
+    data.setRole("ROLE_USER"); // ROLE_역할  
+  
+    userRepository.save(data);  
+}
+```
+사용자로부터 직접 입력받은 데이터가 있는 DTO를 DB에 담기 전,
+처리 과정을 거쳐서 DB에 담아야 함(비번 암호화, 역할 부여, ...)
+=> 회원 가입 프로세싱 과정에서 수행할 것
+
+UserEntity 생성
+```
+@Setter  
+@Getter  
+@Entity  
+public class UserEntity {  
+    @Id  
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  
+    private int id;  
+    private String username;  
+    private String password;  
+    private String role;  
+}
+```
+==@Entity== 로 Spring이 Entity 객체로 인식할 수 있게 명시
+(Entity 객체는 ==@Id== 어노테이션이 달린 id 필드 필수)
+==@GeneratedValue== 로 직접 데이터를 insert하지 않고 자동 생성(생성 타입=ID)
+
+Entity는 데이터 바구니 역할, 이전에 쓰던 VO와 유사한 역할
+DB 저장 전 id와 role을 추가해주고 저장할 것임
+
+DB에 Entity 객체를 자동으로 테이블 생성해주기
+=> Hibernate DDL 설정
+
+application.properties 설정
+```
+spring.jpa.hibernate.ddl-auto=none 
+spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+```
+
+`ddl-auto=none` 부분을 `ddl-auto=update`로 바꿔주고 프로젝트 실행하면
+자동으로 Entity를 DB에 테이블로 넣어준다.
+
+(주의!) 테이블 생성 후 다시 none으로 바꿔주기.
+update로 놔두면 계속 덮어쓰기함
+
+UserRepository 생성
+```
+public interface UserRepository extends JpaRepository<UserEntity, Integer> {  
+    // repository는 인터페이스로 생성, jparepository 상속받도록 작성  
+    // 맵핑은 entity:id -> UserEntity, Integer}
+```
+
+JpaRepository를 상속받음 -> JPA 관리
+
+SecurityConfig에서 접근 권한 수정
+: /join, /joinProc 은 회원가입이므로 비회원도 접근 가능해야 함 -> permitAll에 추가
+
+### 회원 중복 검증 및 처리 로직
+**회원 중복 검증**
+username에 대해서 중복된 가입이 발생하면 서비스에서 아주 치명적인 문제가 발생하기 때문에 백엔드단에서 중복 검증과 중복 방지 로직을 작성해야 한다.
+
+UserEntity Unique 설정
+-> 아이디 정의에 ==@Column==(unique = true) 기입해준다.
+
+UserRepository에 중복 검사 메서드 정의
+-> `boolean existsByUsername(String username);`
+
+###### 중복 검사 로직 구현 관련
+아이디 중복 검사는 백엔드단 + 프론트엔드단 모두 수행하는 것이 바람직하다.
+
+1. 프론트엔드단에서 1차 검증(정규식, 가입 불가 이름 등)
+2. 백엔드단에서 2차 검증(중복 검사 등)
+
+프론트단에서만 구현되어 있으면 GET 방식 SQL 인젝션 등으로 강제 가입이 가능하기 때문에
+백엔드단에서 구현은 필수로 해 준다.
+다만 백엔드단에서 다 구현해놓으면 코드가 복잡해지니까
+프론트단에서는 정규식 활용으로 함
+
+
+
+
