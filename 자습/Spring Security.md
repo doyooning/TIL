@@ -451,3 +451,54 @@ Spring Security 제공 SecurityContext 관련 기능
 
 만약 로그인 안 한 사용자(비회원)가 접근하면
 -> id = anonymousUser , role = ROLE_ANONYMOUS
+
+
+### 세션 설정
+사용자가 로그인을 진행한 뒤, 사용자 정보는 `SecurityContextHolder`에 의해서 서버 세션에 관리된다.
+
+**세션 소멸 시간 설정**
+세션 타임아웃 설정을 통해 로그인 이후 세션이 유지되고 소멸하는 시간을 설정할 수 있다.
+세션 소멸 시점은 서버에 마지막 특정 요청을 수행한 뒤 설정한 시간 만큼 유지된다. (기본 시간 1800초)
+
+application.properties에서
+`server.servlet.session.timeout=1800` : 1800초
+`server.servlet.session.timeout=90m` : 90분
+
+
+**다중 로그인 설정**
+[Authentication Persistence and Session Management 스프링 공식 문서 바로가기](https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html)
+동일한 아이디로 다중 로그인을 진행할 경우에 대한 설정 방법은 세션 통제를 통해 진행한다.
+
+SecurityConfig.java
+```
+...
+http.sessionManagement((auth) -> auth  
+                .maximumSessions(5)  
+                .maxSessionsPreventsLogin(true));
+...
+```
+
+sessionManagement() 메소드를 통한 설정을 진행한다.
+
+maximumSession(정수) : 하나의 아이디에 대한 다중 로그인 허용 개수
+maxSessionPreventsLogin(불린) : 다중 로그인 개수를 초과하였을 경우 처리 방법
+- true : 초과시 새로운 로그인 차단
+- false : 초과시 기존 세션 하나 삭제
+
+**세션 고정 보호**
+
+![](https://cafeptthumb-phinf.pstatic.net/MjAyNTA3MzBfNzAg/MDAxNzUzODIyNDkxNDAx.7Wa3kJRkR0OfmNLKzDLyFyGU7_B01yjsrO9KQywYbmkg.9bP2o9pF_NoOIwxd22046HxY2p045HZ3Wfum8Yt2UZ8g.PNG/image-39342e82-86de-4896-965f-884aadf780da.png?type=w1600)
+
+위 그림처럼 해커가 서버에 접근해서 세션 쿠키를 획득하면 Admin 권한을 가지고 서버에 다시 접근할 수 있으므로 조치가 필요하다.
+세션 고정 공격을 보호하기 위한 로그인 성공시 세션 설정 방법은 sessionManagement() 메소드의 sessionFixation() 메소드를 통해서 설정할 수 있다.
+
+```
+...
+http.sessionManagement((auth) -> auth.sessionFixation().changeSessionId());
+...
+```
+
+- `sessionManagement().sessionFixation().none()` : 로그인 시 세션 정보 변경 안함
+- `sessionManagement().sessionFixation().newSession()` : 로그인 시 세션 새로 생성
+- `sessionManagement().sessionFixation().changeSessionId()` : 로그인 시 동일한 세션에 대한 id 변경
+
