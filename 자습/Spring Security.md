@@ -660,6 +660,52 @@ formLogin() 메소드 제거 후 httpBasic() 메소드를 통해 설정
 해당 페이지에서 알림 창으로 로그인 폼을 출력함
 
 
+### Role Hierachy
+**계층 권한 : Role Hierarchy**
+권한 A, 권한 B, 권한 C가 존재하고 권한의 계층은 “A < B < C”라고 설정을 진행하고 싶은 경우 RoleHierarchy 설정을 진행할 수 있다.
+
+기존 방식은 hasAnyRole() 안에 접근 가능한 권한을 다 명시해주는 방식
+-> 관리할 계층이 많아지면 다 명시해주기 어려움
+
+**계층 권한 메소드 등록**
+SecurityConfig에 추가
+```
+...
+@Bean  
+public RoleHierarchy roleHierarchy() {  
+	RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();  
+	hierarchy.setHierarchy("ROLE_C > ROLE_B\n" +  
+			"ROLE_B > ROLE_A");  
+	return hierarchy;  
+}
+...
+```
+계층 관계를 만들어주는 메서드
+여러 계층 관계 지정할 때는 문자열 끝에 개행문자 넣어주고 연결
+C > B > A 관계 형성됨
+
+**메소드 적용을 통한 ROLE 적용**
+SecurityConfig의 filterChain 수정
+```
+...
+        http.authorizeHttpRequests((auth) -> auth  
+                        .requestMatchers("/login").permitAll()  
+                        .requestMatchers("/").hasAnyRole("A")  
+                        .requestMatchers("/manager").hasAnyRole("B")  
+                        .requestMatchers("/admin").hasAnyRole("C")  
+                        .anyRequest().authenticated()  
+                );
+...
+```
+/ 주소는 A, B, C 모두 접근 가능
+/manager 주소는 B, C 접근 가능
+/admin 주소는 C만 접근 가능
+
+**6.3.1 deprecated**
+스프링 시큐리티 6.3.x 버전대로 업데이트되면서 RoleHierarchyImpl가 deprecated되며 해당 구현으로는 사용이 불가능하다.
+
+공식 문서
+https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/access/hierarchicalroles/RoleHierarchyImpl.html#fromHierarchy%28java.lang.String
 
 
 
