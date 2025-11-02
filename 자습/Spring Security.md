@@ -583,3 +583,59 @@ application.properties
 앱에서 사용하는 API 서버의 경우 보통 세션을 STATELESS로 관리하기 때문에 스프링 시큐리티 csrf enable 설정을 진행하지 않아도 된다.
 JWT를 사용해서 토큰을 관리하는 경우도 동일.
 
+
+### InMemory 방식 유저 정보 저장
+**소수의 유저를 저장할 좋은 방법**
+토이 프로젝트를 진행하는 경우 또는 시큐리티 로그인 환경이 필요하지만 소수의 회원 정보만 가지며 데이터베이스라는 자원을 투자하기 힘든 경우에는 회원가입 없는 InMemory 방식으로 유저를 저장하면 된다.
+
+이 방식은 InMemoryUserDetailsManager 클래스를 통해 유저를 등록하면 된다.
+
+**InMemoryUserDetailsManager**
+[https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/in-memory.html](https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/in-memory.html)
+SecurityConfig에 추가 - filterChain 말고 밖에
+```
+@Bean  
+public UserDetailsService userDetailsService() {  
+  
+    UserDetails user1 = User.builder()  
+            .username("admintest")  
+            .password(bCryptPasswordEncoder().encode("admin1"))  
+            .roles("ADMIN")  
+            .build();  
+  
+    UserDetails user2 = User.builder()  
+            .username("usertest")  
+            .password(bCryptPasswordEncoder().encode("user1"))  
+            .roles("USER")  
+            .build();  
+  
+    return new InMemoryUserDetailsManager(user1, user2);  
+}
+```
+ID: admintest, PW: admin1(암호화됨), 권한: ADMIN
+ID: usertest, PW: user1(암호화됨), 권한: USER
+
+DB 연동이 안 되어 있을때만 사용된다.
+이미 사용자 DB가 있고 연동되어있으면 적용 안 됨
+
+###### InMemoryUserDetailsManager 관련
+스프링 시큐리티는 내부적으로 `UserDetailsService` 타입의 Bean을 단 하나만 사용합니다.
+
+- 이미 다른 곳에서 `@Service` 또는 `@Bean` 으로
+    `public class CustomUserDetailsService implements UserDetailsService {     ... }`
+    이런 구현체를 등록해서 DB에서 사용자 정보를 읽어오고 있다면,  
+    Spring Security는 **그 구현체를 우선적으로 사용**합니다.
+    
+- 반면,  
+    DB 연동 없이,  
+    오직 메모리 상의 사용자 정보만 쓰고 싶다면 `InMemoryUserDetailsManager`가 사용됩니다.
+
+ ⚙️ 동작 우선순위
+스프링 부트가 구동될 때,  
+Security 설정 중 다음 순서로 `UserDetailsService`를 찾습니다:
+1. **직접 등록한 Bean** (`@Bean` or `@Service` 로 등록된 `UserDetailsService`)
+2. 없으면 **자동 구성된 InMemoryUserDetailsManager** (기본 계정 `user` + 랜덤 비밀번호)
+3. 두 개가 다 있으면, **직접 등록한 Bean**이 우선합니다.
+
+
+
