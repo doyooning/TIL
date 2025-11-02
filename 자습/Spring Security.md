@@ -502,3 +502,84 @@ http.sessionManagement((auth) -> auth.sessionFixation().changeSessionId());
 - `sessionManagement().sessionFixation().newSession()` : 로그인 시 세션 새로 생성
 - `sessionManagement().sessionFixation().changeSessionId()` : 로그인 시 동일한 세션에 대한 id 변경
 
+
+### CSRF
+**CSRF란?**
+CSRF(Cross-Site Request Forgery)는 요청을 위조하여 사용자가 원하지 않아도 서버측으로 특정 요청을 강제로 보내는 방식이다. (회원 정보 변경, 게시글 CRUD를 사용자 모르게 요청)
+
+**개발 환경에서 csrf disable()**
+개발 환경에서는 Security Config 클래스를 통해 CSRF 설정을 disable 설정하였다. 배포 환경에서는 CSRF 공격 방지를 위해 csrf disable 설정을 제거하고 추가적인 설정을 진행해야 한다.
+
+`http.csrf((auth) -> auth.disable());`
+
+**배포 환경에서 진행 사항**
+SecurityConfig 클래스에서 csrf.disable() 설정을 진행하지 않으면 자동으로 enable 설정이 진행된다. 
+enable 설정시 스프링 시큐리티는 CsrfFilter를 통해 POST, PUT, DELETE 요청에 대해서 토큰 검증을 진행한다.
+
+Security Config 클래스 설정
+: csrf.disable() 구문 삭제
+
+POST 요청에서 프론트 설정
+: hidden 속성으로 csrf 토큰 추가
+
+login.mustache
+```
+<form action="/loginProc" method="post" name="loginForm">  
+    <input id="username" type="text" name="username" placeholder="id"/>  
+    <input id="password" type="password" name="password" placeholder="password"/>  
+    <input type="hidden" name="_csrf" value="{{_csrf.token}}"/>  
+    <input type="submit" value="로그인"/>  
+</form>
+```
+
+Ajax 요청시
+HTML head 구획에 아래 요소 추가
+```
+<meta name="_csrf" content="{{_csrf.token}}"/> 
+<meta name="_csrf_header" content="{{_csrf.headerName}}"/>
+```
+
+Ajax 요청시 위의 content 값을 가져온 후 함께 요청
+XMLHttpRequest 요청시 setRequestHeader를 통해 `_csrf`, `_csrf_header` Key에 대한 토큰 값 넣어 요청
+
+GET 방식 로그아웃을 진행할 경우 설정 방법
+csrf 설정시 POST 요청으로 로그아웃을 진행해야 하지만 아래 방식을 통해 GET 방식으로 진행할 수 있다.
+
+SecurityConfig 클래스 로그아웃 설정
+```
+...
+http.logout((auth) -> auth.logoutUrl("/logout")  
+                .logoutSuccessUrl("/"));
+...
+```
+로그아웃 URL : /logout
+로그아웃 성공시 연결 URL : /
+
+LogoutController 생성
+```
+@Controller  
+public class LogoutController {  
+    @GetMapping("/logout")  
+    public String logout(HttpServletRequest request, HttpServletResponse response) throws Exception {  
+  
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();  
+        if (authentication != null) {  
+            new SecurityContextLogoutHandler().logout(request, response, authentication);  
+        }  
+  
+        return "redirect:/";  
+    }  
+}
+```
+Logout을 GET 방식으로 요청할 것이므로 GET 매핑을 해준다.
+SecurityContextHolder에 있는 사용자의 인가 정보를 LogoutHandler의 logout 메서드로 로그아웃한다.
+
+mustache에서 csrf 토큰 변수 오류 발생시(csrf 토큰 속성(`_csrf`)을 못 찾을 때) :
+아래 구문을 변수 설정 파일에 추가해준다.
+application.properties
+`spring.mustache.servlet.expose-request-attributes=true`
+
+**API 서버의 경우 csrf.disable() ?**
+앱에서 사용하는 API 서버의 경우 보통 세션을 STATELESS로 관리하기 때문에 스프링 시큐리티 csrf enable 설정을 진행하지 않아도 된다.
+JWT를 사용해서 토큰을 관리하는 경우도 동일.
+
