@@ -637,5 +637,31 @@ Security 설정 중 다음 순서로 `UserDetailsService`를 찾습니다:
 2. 없으면 **자동 구성된 InMemoryUserDetailsManager** (기본 계정 `user` + 랜덤 비밀번호)
 3. 두 개가 다 있으면, **직접 등록한 Bean**이 우선합니다.
 
+### HTTP Basic 인증
+로그인 방식
+- formLogin
+- httpBasic
 
+Http Basic 인증 방식
+Http Basic 인증 방식은 아이디와 비밀번호를 Base64 방식으로 인코딩한 뒤, 
+HTTP 인증 헤더에 부착하여 서버측으로 요청을 보내는 방식이다.
+
+따로 페이지가 필요하지 않고 브라우저에서 헤더에 아이디 비번을 넣어 바로 보냄
+일반 웹사이트도 구현, 특히 MSA 구현할 때 내부 통신망에 더 엄격한 인증이 필요할 때 사용됨
+
+참조
+[https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/basic.html](https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/basic.html)
+
+**HttpBasic 방식 인증을 위한 Config 클래스 설정**
+formLogin() 메소드 제거 후 httpBasic() 메소드를 통해 설정
+
+`http.httpBasic(Customizer.withDefaults());`
+
+해당 페이지에서 알림 창으로 로그인 폼을 출력함
+
+
+
+
+
+​
 
