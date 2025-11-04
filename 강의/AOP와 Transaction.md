@@ -170,13 +170,19 @@ public String[] get(String str) {
 ```
 
 POSTMAN 에서 확인
+`http://localhost:8080/time/txtest?str=1234567890...(50자)`
+-> 두 테이블에 모두 반영 O
+
+`http://localhost:8080/time/txtest?str=1234567890...(>50자)`
+-> 두 테이블에 모두 반영 X (트랜젝션 해제하면 test1에만 insert됨)
 
 Error 확인 ⇒ sample2 테이블에 col 컬럼의 속성이 50자를 넘을 수 없다.
-
 ```sql
 select * from transaction_test1;
 select * from transaction_test2; 
 ```
 
 Trancational 을 적용해 놓았기 때문에 두 기능이 모두 rollback (취소) 두 테이블중 하나라도 컬럼속성에 맞지 않으면 모두 적용되지 않습니다.
+
+
 
