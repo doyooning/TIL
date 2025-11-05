@@ -66,6 +66,36 @@ public ResponseEntity<BoardVO> create(@RequestBody BoardVO vo) {
 }
 ```
 
+6. @ResponseBody
+	리턴값 : 객체(JSON 변환) 간단한 JSON API활용 
+	예) `return boardService.getList();`
+	각 BoardApiController의 메서드랑 1:1
+
+```javascript
+// 새 글 저장
+axios.post('/api/board', {
+title: title,
+content: content,
+writer: writer
+})
+
+// 글 수정
+axios.put('/api/board/' + bno, {
+title: title,
+content: content,
+writer: writer
+})
+
+// 글 조회
+axios.get('/api/board/' + bno)
+
+// 글 삭제
+axios.delete('/api/board/' + bno)
+```
+
+
+
+
 
 
 
