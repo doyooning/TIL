@@ -24,12 +24,12 @@
 
 
 최초 Vue 프로젝트 생성
-```
+```bash
 npm create vue@3.10.3
 ```
 
 Vue 서버 실행
-```
+```bash
 npm install
 npm run dev
 ```
@@ -38,7 +38,7 @@ http://localhost:5173/ 클릭해서 확인
 ctrl + c로 연결 해제
 
 ### script
-```
+```vue
 export default{
 	// data: 컴포넌트 전반에 걸쳐서 사용할 값
 }
@@ -87,4 +87,46 @@ export default{
 	</ul>
 </template>	
 ```
+
+
+### 이벤트 
+v-on 디렉티브와 methods 옵션 속성으로 이벤트 연결하기
+이벤트 핸들러 : 이벤트 타입과 일치하는 이벤트 발생되면 실행
+
+수식어(modifier)
+: 이벤트 처리 방식을 제어하는 데 사용하는 기능
+```vue
+methods: {
+    onkeyUpHandler(event) {
+      if (event.keyCode === 13) {
+        console.log('Enter Key');
+      }
+    },
+...
+  <input type="text" @keyup.enter="onkeyUpHandler" />
+```
+
+반응성(reactivity)
+: 데이터의 변화를 감지하고 자동으로 화면 UI를 업데이트하는 기능
+
+반응성 시스템(reactivity system)
+: 데이터 변화를 감지하고 업데이트하는 기능을 제공하는 시스템
+
+v-once : 딱 한번만 렌더링하고 그 이후 접근은 막음(화면 업데이트를 막음)
+
+메모이제이션(memoization)
+: 이전에 계산한 결과를 저장해 중복계산을 피하고 실행 속도를 향상시키는 프로그래밍 기술
+```vue
+  <div v-memo="[name, gender]"></div>
+
+  <p>이름: {{ name }}</p>
+  <p>성별: {{ gender }}</p>
+  <p>나이: {{ age }}</p>
+
+  <button @click="name = 'ssg1'">이름변경</button>
+  <button @click="gender = 'female'">성별변경</button>
+  <button @click="age = 30">나이변경</button>
+```
+
+
 
