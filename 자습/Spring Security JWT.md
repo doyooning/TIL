@@ -90,3 +90,95 @@ http
 로그인 성공시 successfulAuthentication() 메소드를 통해 JWT를 응답해야 한다. 따라서 JWT 응답 구문을 작성해야 하는데 JWT 발급 클래스를 아직 생성하지 않음
 
 
+### DB 기반 로그인 검증
+
+**UserDetailsService 커스텀 구현**
+
+**- CustomUserDetailsService**
+```java
+@Service  
+public class CustomUserDetailsService implements UserDetailsService {  
+  
+    private final UserRepository userRepository;  
+  
+    public CustomUserDetailsService(UserRepository userRepository) {  
+        this.userRepository = userRepository;  
+    }  
+  
+    @Override  
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {  
+  
+        //DB에서 조회  
+        UserEntity userData = userRepository.findByUsername(username);  
+  
+        if (userData != null) {  
+  
+            //UserDetails에 담아서 return하면 AuthenticationManager가 검증 함  
+            return new CustomUserDetails(userData);  
+        }  
+  
+        return null;  
+    }  
+}
+```
+
+**UserDetails 커스텀 구현**
+
+**- CustomUserDetails**
+```java
+public class CustomUserDetails implements UserDetails {  
+  
+    private final UserEntity userEntity;  
+  
+    public CustomUserDetails(UserEntity userEntity) {  
+        this.userEntity = userEntity;  
+    }  
+  
+    @Override  
+    public Collection<? extends GrantedAuthority> getAuthorities() {  
+        Collection<GrantedAuthority> collection = new ArrayList<>();  
+        collection.add(new GrantedAuthority() {  
+  
+            @Override  
+            public String getAuthority() {  
+                return userEntity.getRole();  
+            }  
+        });  
+  
+        return collection;  
+    }  
+  
+    @Override  
+    public String getPassword() {  
+        return userEntity.getPassword();  
+    }  
+  
+    @Override  
+    public String getUsername() {  
+        return userEntity.getUsername();  
+    }  
+  
+    @Override  
+    public boolean isAccountNonExpired() {  
+        return true;  
+    }  
+  
+    @Override  
+    public boolean isAccountNonLocked() {  
+        return true;  
+    }  
+  
+    @Override  
+    public boolean isCredentialsNonExpired() {  
+        return true;  
+    }  
+  
+    @Override  
+    public boolean isEnabled() {  
+        return true;  
+    }  
+}
+```
+CustomUserDetails는 사용자 정보를 주고받을 DTO같은 느낌
+대부분의 메서드가 Override라 정형화되어있음
+
