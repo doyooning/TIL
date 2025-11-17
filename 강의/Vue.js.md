@@ -82,7 +82,7 @@ export default{
 <template>
 	<ul>
 		<li v-for="(value, key, index) in user" :key="index">
-		  {{ index }}, key: {{ key }}, index: {{ value }}
+		  {{ index }}, key: {{ key }}, value: {{ value }}
 		</li>
 	</ul>
 </template>	
