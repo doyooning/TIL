@@ -253,3 +253,48 @@ response.setStatus(401);
 
 **발급 테스트**
 POSTMAN으로 /login 경로로 username과 password를 포함한 POST 요청을 보낸 후 응답 헤더에서 Authorization 키에 담긴 JWT를 확인한다.
+
+
+###### JWT 검증 필터
+로그인 후 메인 페이지는 접근이 가능(별도의 토큰 검증 필요X)
+하지만 /admin같은 경우는 403 오류 반환(토큰은 있는데 검증이 안 됨)
+=> 토큰 검증 필터 필요
+
+**JWT 검증 필터**
+스프링 시큐리티 filter chain에 요청에 담긴 JWT를 검증하기 위한 커스텀 필터를 등록해야 한다.
+
+해당 필터를 통해 요청 헤더 Authorization 키에 JWT가 존재하는 경우 JWT를 검증하고 강제로SecurityContextHolder에 세션을 생성한다.
+(이 세션은 STATLESS 상태로 관리되기 때문에 해당 요청이 끝나면 소멸 된다.)
+
+JWTFilter를 OncePerRequestFilter를 상속받아 구현
+(요청당 한번만 실행하는 필터)
+
+**검증**
+헤더 검증 : 헤더의 Authorization이 null이 아니고 접두사가 "Bearer "이면 성공
+실패시 검증 메서드 종료
+
+토큰 소멸 시간 검증 : 접두사 제거한 토큰을 isExpired 메서드에 넘겨서 확인
+실패시 검증 메서드 종료
+
+```java
+//userEntity를 생성하여 값 set 
+UserEntity userEntity = new UserEntity(); 
+userEntity.setUsername(username); 
+userEntity.setPassword("temppassword"); 
+userEntity.setRole(role);
+```
+토큰에서 username, role 얻어서 값 세팅
+비밀번호는 토큰에 없는데 userEntity에는 비밀번호를 세팅해주어야 하므로 임의의 값을 넣어준다.
+(비번을 DB에서 조회를 하게 되면 매번 요청이 올 때마다 DB조회를 해야 하는 상황이 발생)
+
+**SecurityConfig JWTFilter 등록**
+```java
+http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
+```
+LoginFilter 앞에 등록해준다.
+
+**JWT 요청 인가 테스트**
+POSTMAN으로 로그인 먼저 진행, admin 토큰을 얻음
+GET 방식으로 /admin 접근할 때 요청헤더의 Authorization에 토큰을 넣고 접근
+-> 200 OK
+
