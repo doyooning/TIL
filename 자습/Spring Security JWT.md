@@ -231,5 +231,25 @@ JWT의 특징은 내부 정보를 단순 BASE64 방식으로 인코딩하기 때
 - role 확인 메소드
 - 만료일 확인 메소드
 ​
+LoginFilter, SecurityConfig에 JWTUtil를 주입해서 사용
+-> private final로 주입하고 생성자에도 추가
 
-​
+로그인 성공시:
+```java
+String token = jwtUtil.createJwt(username, role, 60*60*10L); response.addHeader("Authorization", "Bearer " + token);
+```
+토큰에 사용자명, 권한, 만료기간이 포함됨
+응답헤더에는 토큰 정보가 들어감
+
+HTTP 인증 방식은 RFC 7235 정의에 따라 아래 인증 헤더 형태를 가져야 한다.
+​Authorization: 타입 인증토큰 
+(예시 -  Authorization: Bearer 인증토큰string)
+
+로그인 실패시:
+```java
+response.setStatus(401);
+```
+401 반환
+
+**발급 테스트**
+POSTMAN으로 /login 경로로 username과 password를 포함한 POST 요청을 보낸 후 응답 헤더에서 Authorization 키에 담긴 JWT를 확인한다.
