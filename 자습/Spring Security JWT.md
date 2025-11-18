@@ -182,3 +182,54 @@ public class CustomUserDetails implements UserDetails {
 CustomUserDetails는 사용자 정보를 주고받을 DTO같은 느낌
 대부분의 메서드가 Override라 정형화되어있음
 
+
+### JWT 발급과 검증
+
+**JWT 발급과 검증**
+- 로그인시 → 성공 → JWT 발급
+- 접근시 → JWT 검증
+
+**JWT 생성 원리**
+[https://www.jwt.io/](https://www.jwt.io/)
+
+JWT는 Header.Payload.Signature 구조로 이루어져 있다. 각 요소는 다음 기능을 수행한다.
+
+**- Header**
+- JWT임을 명시
+- 사용된 암호화 알고리즘
+**- Payload**
+- 정보
+**- Signature**
+- 암호화알고리즘((BASE64(Header))+(BASE64(Payload)) + 암호화키)
+
+JWT의 특징은 내부 정보를 단순 BASE64 방식으로 인코딩하기 때문에 외부에서 쉽게 디코딩 할 수 있다.
+외부에서 열람해도 되는 정보를 담아야하며, 토큰 자체의 발급처를 확인하기 위해서 사용한다.
+
+(지폐와 같이 외부에서 그 금액을 확인하고 금방 외형을 따라서 만들 수 있지만 발급처에 대한 보장 및 검증은 확실하게 해야하는 경우에 사용한다. 따라서 토큰 내부에 비밀번호와 같은 값 입력 금지)
+
+**JWT 암호화 방식**
+**- 암호화 종류**
+- 양방향
+	대칭키 - 이 프로젝트는 양방향 대칭키 방식 사용 : HS256
+	비대칭키
+- 단방향
+
+**암호화 키 저장**
+암호화 키는 하드코딩 방식으로 구현 내부에 탑재하는 것을 지양하기 때문에 변수 설정 파일에 저장한다.
+-> application.properties
+
+###### JWTUtil
+**- 토큰 Payload에 저장될 정보**
+- username
+- role
+- 생성일
+- 만료일
+
+**- JWTUtil 구현 메소드**
+- JWTUtil 생성자
+- username 확인 메소드
+- role 확인 메소드
+- 만료일 확인 메소드
+​
+
+​
