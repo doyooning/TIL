@@ -135,3 +135,104 @@ v-model 디렉티브
 
 입력한 요소의 값을 가져올 때 v-model 디렉티브를 사용
 
+### 계산된 속성과 감시자 속성
+computed -> options API에서 제공하는 속성
+
+==계산된 속성(computed)==
+: computed 옵션 속성으로 정의해 사용 
+컴포넌트에서 자주 사용하는 데이터를 캐시해 애플리케이션의 성능을 향상시킴 
+코드의 가독성을 높임
+(cache: 데이터를 메모리같은 곳에 임시 저장)
+
+```vue
+<script>
+export default {
+  data() {
+    return {
+      firstName: 'Minsu',
+      lastName: 'Kim',
+      numberArray: [1, 2, 3, 4, 5],
+    };
+  },
+  computed: {
+    fullName() {
+      console.log('computed fullName');
+      return `${this.lastName} ${this.firstName}`;
+    },
+  
+    evenSum() {
+      return this.numberArray
+        .filter((v) => v % 2 == 0)
+        .reduce((acc, cur) => acc + cur);
+    },
+  },
+};
+</script>
+<template>
+  <h1>{{ lastName }}-{{ firstName }}</h1>
+  <h1>{{ firstName }} - {{ lastName }}</h1>
+  <h1>{{ fullName }}</h1> // Kim Minsu (computed fullName)
+  <h1>{{ fullName }}</h1>
+  <h1>{{ evenSum }}</h1> // 6
+</template>
+```
+
+==감시자 속성(watch)==
+: watch 옵션 속성으로 정의해 사용 
+데이터의 변경을 감시하고, 변경이 감지될 때마다 특정 동작을 수행할 수 있게 함
+
+기본 사용법 
+-> watch 옵션 속성에도 함수를 정의해야 함
+
+```vue
+...
+  data() {
+    return {
+      inputStr: '',
+  ...
+  watch: {
+    inputStr(newValue, oldValue) {
+      console.log(`old value: ${oldValue}`);
+      console.log(`new value: ${newValue}`);
+    },
+...
+
+  <input type="text" v-model="inputStr" />
+
+```
+
+근데 기본 사용법으로는 객체나 배열의 변경을 추적할 때 적용이 안 된다
+=> 깊은 사용법 적용
+
+script
+```vue
+  watch: {
+    inputStr(newValue, oldValue) {
+      console.log(`old value: ${oldValue}`);
+      console.log(`new value: ${newValue}`);
+    },
+    num(newValue, oldValue) {
+      console.log(`old value: ${oldValue}`);
+      console.log(`new value: ${newValue}`);
+    },
+    arr: {
+      handler(newValue, oldValue) {
+        console.log(`old value: ${oldValue}`);
+        console.log(`new value: ${newValue}`);
+      },
+      deep: true,
+    },
+    obj: {
+      handler(newValue, oldValue) {
+        console.log(`old value: ${JSON.stringify(oldValue)}`);
+        console.log(`new value: ${JSON.stringify(newValue)}`);
+      },
+      deep: true,
+    },
+  },
+```
+
+arr(배열), obj(객체)에 깊은 사용법 적용
+handler -> 값 변동 감시, 콜백 함수
+deep -> 초기 렌더링시 콜백 함수 호출 여부(기본: false)
+
