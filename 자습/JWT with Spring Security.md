@@ -326,3 +326,58 @@ GET 방식으로 /admin 접근할 때 요청헤더의 Authorization에 토큰을
 - **보안 설정 필수**
 	- 토큰 저장 위치(예: 쿠키 vs 로컬스토리지)와 쿠키 옵션(SameSite, HttpOnly, Secure 등)을 잘 설정해야 XSS/CSRF 공격 방지 가능
 
+### CORS 설정
+CORS(교차 출처 리소스 공유)
+: 웹 페이지의 리소스를 최초 서비스된 도메인 밖의 다른 도메인으로부터 요청할 수 있게 허용하는 구조
+ -> 기본적으로 금지됨
+
+그치만 우리가 개발할 때
+프론트엔드 서버 --> 웹 브라우저 <-- 백엔드 서버
+이런 구조가 되기 때문에, 백엔드쪽에서 프론트쪽의 CORS을 허용해주어야 함
+
+1.
+SecurityConfig -> FilterChain에 추가
+```java
+http.cors((corsCustomizer -> corsCustomizer.configurationSource(
+		new CorsConfigurationSource() {  
+
+            @Override  
+            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) { 
+                CorsConfiguration configuration = new CorsConfiguration();  
+				configuration.setAllowedOrigins(
+				// 허용할 출처(서버)
+					Collections.singletonList("http://localhost:3000")
+				);
+				// GET, POST 등 모든 방식 허용
+                configuration.setAllowedMethods(Collections.singletonList("*"));
+                // 프론트에서 Credentials 설정하면 true로 설정해줌  
+                configuration.setAllowCredentials(true);
+                // 헤더 전부 허용
+                configuration.setAllowedHeaders(Collections.singletonList("*"));
+                // 허용 시간
+                configuration.setMaxAge(3600L);
+                // 클라이언트단으로 JWT를 Authorization에 보냄  
+                configuration.setExposedHeaders(
+	                Collections.singletonList("Authorization")
+	            );  
+                return configuration;  
+            }  
+        })));
+```
+Security Filter를 거치는 로그인 방식 부분을 따로 처리하지 않으면 토큰이 반환되지 않음 
+
+2.
+CorsMvcConfig 추가
+```java
+@Configuration  
+public class CorsMvcConfig implements WebMvcConfigurer {  
+    @Override  
+    public void addCorsMappings(CorsRegistry corsRegistry) {  
+  
+        corsRegistry.addMapping("/**")  
+                .allowedOrigins("http://localhost:3000");  
+    }  
+}
+```
+컨트롤러로 들어오는 데이터는 WebMVC에서 처리
+
