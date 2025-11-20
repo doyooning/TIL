@@ -355,8 +355,32 @@ watch(
 </template>
 ```
 
-●watchEffect()
+`watchEffect()`
+- 콜백 함수 내부에서 참조하는 모든 반응형 데이터를 감시
+- optionsAPI에서는 deep, immediate 옵션이 true로 적용되어 있음
+- 콜백 함수의 시점을 결정하는 flush 옵션이 있음
 
 immediate와deep속성을사용하지않음 • 감시하는반응형데이터중하나라도값이변경되면콜백함수호출
 
+
+`watchPostEffect()` 
+• flush속성이결합된기능이라서 flush속성을지정하지않아도 DOM이갱신된후콜백함수실행
+
+
+`props` 
+컴포넌트에서 다른 컴포넌트로 데이터를 전달할 때 사용하는 속성
+defineProps()함수를사용할때 ① prop의타입을단독으로지정 ② prop의타입을배열로지정 ③ type,default,required속성사용
+
+DefineProps 컴포넌트에서는 부모에서 전달한 반응형 데이터를 defineProps()를 사용하여 받아서 출력할 수 있다.
+
+`emits` 
+emits로이벤트호출할때 ① 별도의함수를이벤트핸들러로연결해호출 ② 직접호출
+
+optionsAPI : 컴포넌트에서 전달한 이벤트를 전달받을 때 emits를 사용
+CompositionAPI : defineEmits() 함수를 사용
+
+이벤트 등록할 때는 KebabCase로 작성하는 것을 권장(대소문자 인식을 못 함)
+-> 연결할 때 알아서 인식해서 CamelCase로 바꿔줌
+
+props는 데이터를, emits는 이벤트를 전달하는 것으로 이해하면 됨
 
