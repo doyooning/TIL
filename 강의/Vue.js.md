@@ -322,3 +322,41 @@ ref() 함수로 생성한 반응형 데이터를 HTML 태그에서 검색할 때
 : `computed()` 함수를 `get()`과 `set()` 함수로 세분해서 사용
 
 
+함수 정의 
+• 실행 가능한 코드 블록을 함수(메서드)로 정의할 수 있음
+
+감시자 속성 
+`watch(반응형데이터, (현재값, 이전값) => {}, 옵션 : immediate/deep/once/post | sync)`
+ - 반응형 데이터
+	 ==ref()==
+	 반응형 데이터는 반응형 데이터 자체를(변수의 값이 완전히 달라지는 것) 감시
+	 (배열이나 객체의 속성 값 변경은 감시 x)
+
+ref()로 생성한반응형데이터를감시하는경우 • 오직반응형변수의값이완전히달라지는지만감시 • deep속성을사용하면감지가능(단,currentValue와prevValue의값이같음)
+
+reactive()로 생성한반응형데이터를감시하는경우 • 내부값이변경되면감지가능 • currentValue와 prevValue의 값이 같음 • 반응형데이터를콜백함수형태로사용하면이전값을알수있음
+
+```vue
+<script setup>
+import { reactive, ref, watch } from 'vue';
+const state = reactive({ count: 0 });
+// 반응형 데이터를 콜백 함수 형태로 사용한 인자로 watch()에게 넘겨주기
+watch(
+  () => state.count,
+  (curVal, preVal) => {
+    console.log(curVal, preVal);
+  }
+);
+</script>
+<template>
+  <h1>reactive : {{ state.count }}</h1>
+  <button @click="state.count++">증가</button>
+  <button @click="state.count--">감소</button>
+</template>
+```
+
+●watchEffect()
+
+immediate와deep속성을사용하지않음 • 감시하는반응형데이터중하나라도값이변경되면콜백함수호출
+
+
