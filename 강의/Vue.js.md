@@ -384,3 +384,15 @@ CompositionAPI : defineEmits() 함수를 사용
 
 props는 데이터를, emits는 이벤트를 전달하는 것으로 이해하면 됨
 
+
+### Vue 라우터
+
+VueJS는 SPA 기반, 자체적으로 라우팅 기술 처리 방법을 제공하지 않음
+-> 외부 라이브러리 설치
+
+Vue 라우터 설치
+```
+$ npm install vue-router@4
+```
+
+
