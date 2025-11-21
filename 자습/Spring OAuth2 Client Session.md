@@ -67,3 +67,8 @@ registration은 외부 서비스에서 우리 서비스를 특정하기 위해 �
 
 **구글 OAuth2 클라이언트 신청**
 
+### OAuth2UserService 응답 받기
+성공적으로 JWT 토큰 발급하면 유저 정보를 userDetailsService로 가져와야 사용 가능
+-> 응답 전달할 DTO 구현(네이버, 구글), SecurityConfig에 OAuth2UserService 등록 
+
+
