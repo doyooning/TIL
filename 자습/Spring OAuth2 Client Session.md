@@ -126,3 +126,19 @@ http.oauth2Login((oauth2) -> oauth2
 ```
 
 
+### Client Registration
+
+**OAuth2 서비스 변수 등록 방법**
+
+기존에 application.properties 변수 설정 파일에서 설정했던 소셜 로그인 제공 서비스에 대한 정보 기입을 관련 클래스를 통해 직접 진행하는 방법
+
+앞으로 커스텀을 진행하기 위해 클래스를 직접 구현하는 것이 필수적임
+
+**- ClientRegistration**
+
+서비스별 OAuth2 클라이언트의 등록 정보를 가지는 클래스
+
+**- ClientRegistrationRepository**
+
+ClientRegistration의 저장소로 서비스별 ClientRegistration들을 가짐
+
