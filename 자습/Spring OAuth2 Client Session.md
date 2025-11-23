@@ -71,4 +71,42 @@ registration은 외부 서비스에서 우리 서비스를 특정하기 위해 �
 성공적으로 JWT 토큰 발급하면 유저 정보를 userDetailsService로 가져와야 사용 가능
 -> 응답 전달할 DTO 구현(네이버, 구글), SecurityConfig에 OAuth2UserService 등록 
 
+### 유저 정보 저장
+
+유저 정보 DB저장 모식도 
+![[Pasted image 20251123233032.png]]
+MySQL 데이터베이스 셋업 해주고 Driver 의존성 다시 On
+이후 UserRepository와 UserEntity 구현
+
+**CustomOAuth2UserService 유저 정보 DB 저장 로직 작성**
+
+service > CustomOAuth2UserService
+```java
+@Service 
+public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+	...
+	private final UserRepository userRepository; 
+	public CustomOAuth2UserService(UserRepository userRepository) { 
+		this.userRepository = userRepository; 
+	}
+	...
+	String username = oAuth2Response.getProvider()+" "+oAuth2Response.getProviderId();
+	UserEntity existData = userRepository.findByUsername(username);
+	
+	String role = "ROLE_USER"; 
+	if (existData == null) { 
+		UserEntity userEntity = new UserEntity(); 
+		userEntity.setUsername(username);
+		userEntity.setEmail(oAuth2Response.getEmail()); 
+		userEntity.setRole(role); 
+		userRepository.save(userEntity); 
+	} else { 
+		existData.setUsername(username); 
+		existData.setEmail(oAuth2Response.getEmail()); 
+		role = existData.getRole(); 
+		userRepository.save(existData); 
+	}
+	...
+```
+Spring Security때처럼 유저 정보 저장 로직을 Service에 추가
 
