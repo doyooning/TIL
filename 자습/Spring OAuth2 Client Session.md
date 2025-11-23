@@ -110,3 +110,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 ```
 Spring Security때처럼 유저 정보 저장 로직을 Service에 추가
 
+### 로그인 페이지 구현
+
+로그인 페이지 구현 및 로그인 컨트롤러 구현
+`<a href="/oauth2/authorization/google">google login</a>` 링크로 연결
+
+**SecurityConfig OAuth2 커스텀 로그인 페이지 등록**
+
+- config > SecurityConfig
+```java
+http.oauth2Login((oauth2) -> oauth2 
+	.loginPage("/login") 
+	.userInfoEndpoint((userInfoEndpointConfig) -> 
+	userInfoEndpointConfig.userService(customOAuth2UserService)));
+```
+
+
