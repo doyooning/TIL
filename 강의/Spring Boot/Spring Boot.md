@@ -84,3 +84,6 @@ import { defineStore } from 'pinia'
 export const useAccountStore = defineStore('account', {});
 ```
 
+
+---
+### 프로젝트 구조
