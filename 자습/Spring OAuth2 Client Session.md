@@ -142,3 +142,20 @@ http.oauth2Login((oauth2) -> oauth2
 
 ClientRegistration의 저장소로 서비스별 ClientRegistration들을 가짐
 
+
+### OAuth2AuthorizationRequestRedirectFilter
+**로그인 페이지에서 : /oauth2/authorization/서비스**
+
+로그인 페이지에서 `GET : /oauth2/authorization/서비스 경로`로 요청을 할 경우 OAuth2 의존성에 의해 `OAuth2AuthorizationRequestRedirectFilter`에서 해당 요청을 받고 내부 프로세서를 진행
+
+`OAuth2AuthorizationRequestRedirectFilter`
+: 요청을 받은 후 해당하는 서비스의 로그인 URI로 요청을 리디렉션 시킴
+이때 서비스의 정보는 지난 시간 등록한 `ClientRegistrationRepository`에서 가져옴
+
+### OAuth2LoginAuthenticationFilter
+**로그인 성공 redirect_uri 필터 : /login/oauth2/code/서비스명**
+
+`OAuth2LoginAuthenticationFilter`
+: 인증 서버에서 로그인을 성공한 뒤 우리 서버측으로 발급되는 CODE를 획득하고, 
+CODE를 통해 Access 토큰과 User 정보를 획득하는 `OAuth2LoginAuthenticationProvider`를 호출하는 일련의 과정을 시작하는 필터
+
