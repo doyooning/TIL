@@ -188,3 +188,92 @@ router-link로 해당하는 vue 라우팅
 웹 폰트 등을 import하는 방식 중에서 html로 가져오기하면 이런 식으로 태그의 속성을 통해서 import 가능
 
 
+### 프로젝트를 위한 프론트엔드 구성
+
+```java
+├── src
+│ ├── components
+│ ├── router
+│ ├── services
+│ ├── stores
+│ └── views 
+├── App.vue
+└── main.js
+```
+
+
+로그인 데이터 제출 스크립트
+```js
+// 로그인 데이터 제출  
+const submit = async () => { // ③  
+  const res = await login(state.form);  
+  
+  switch (res.status) {  
+    case 200:  
+      await router.push("/");  
+      break;  
+  
+    case 404:  
+      window.alert("입력하신 정보와 일치하는 회원이 없습니다.");  
+      break;  
+  }  
+};
+```
+
+
+라우터에 경로 추가
+```js
+{  
+  path: '/join',  
+  name: 'join',  
+  component: () => import('../views/Join.vue')  
+},
+```
+-> vue 먼저 구현하고 하나씩 경로 추가
+
+
+Pinia를 사용한 계정 스토어
+```js
+// Pinia를 사용하여 계정 스토어 구현  
+import {defineStore} from 'pinia'  
+// 계정 데이터를 다루는 계정 스토어  
+export const useAccountStore = defineStore("account", { // ① 스토어 고유 ID    
+	state: () => ({  
+        checked: false, // ② 사용자의 로그인 체크 여부 프로퍼티  
+        loggedIn: false, // ③ 사용자의 로그인 여부 프로퍼티  
+    }),  
+    actions: {  
+        setChecked(val) { // ④ 사용자의 로그인 체크 여부 값을 수정하는 메서드  
+            this.checked = val;  
+        },  
+        setLoggedIn(val) { // ⑤ 사용자의 로그인 여부 값을 수정하는 메서드  
+            this.loggedIn = val;  
+        },  
+    },  
+});
+```
+
+
+CORS 문제 해결
+```js
+// vite.config.js 파일에 서버객체에 Proxy 를 추가하여 /v1/api 로 시작하는 URL 경로는 서버에게 HTTP 요청을 하도록 우회시킨다  
+export default defineConfig({  
+  server: {  
+    proxy: {  
+      "/v1/api": {  
+        target: "http://localhost:8080",  
+        changeOrigin: true  
+      }  
+    }  
+  },  
+  plugins: [  
+    vue(),  
+  ],  
+  resolve: {  
+    alias: {  
+      '@': fileURLToPath(new URL('./src', import.meta.url))  
+    }  
+  }  
+});
+```
+
