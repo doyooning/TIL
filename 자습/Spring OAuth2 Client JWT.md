@@ -80,7 +80,44 @@ OAuth2.0 클라이언트와 스프링 시큐리티 6 프레임워크를 활용�
 ### 동작 모식도
 ![[Pasted image 20251201083105.png]]
 **OAuth2 소셜 로그인을 위한 변수 설정**
-
 application.properties -> registration, provider 등록
 
+**JWT Session과 동일한 과정 진행:**
+소셜 로그인 구현(CustomOAuth2UserService 구현)
+DB 연결, UserEntity와 UserRepository 구현
+Service 계층에 User 정보 DB 저장 로직 추가
 
+
+**JWT 발급과 검증**
+- 로그인시 → 성공 → JWT 발급
+- 접근시 → JWT 검증
+
+
+**JWT 생성 원리**
+[JWT.IO 공식 사이트 바로가기](https://jwt.io/)
+JWT는 Header.Payload.Signature 구조로 이루어져 있다. 각 요소는 다음 기능을 수행한다.
+
+**- Header**
+- JWT임을 명시
+- 사용된 암호화 알고리즘
+
+**- Payload**
+- 정보
+
+**- Signature**
+- 암호화알고리즘((BASE64(Header))+(BASE64(Payload)) + 암호화키)
+
+JWT의 특징은 내부 정보를 단순 BASE64 방식으로 인코딩하기 때문에 외부에서 쉽게 디코딩 가능
+
+외부에서 열람해도 되는 정보를 담아야 하며, 토큰 자체의 발급처를 확인하기 위해서 사용함
+(지폐와 같이 외부에서 그 금액을 확인하고 금방 외형을 따라서 만들 수 있지만, 발급처에 대한 보장 및 검증은 확실하게 해야하는 경우에 사용하기에 토큰 내부에 비밀번호와 같은 값 입력 금지)
+
+**JWT 암호화 방식**
+
+**암호화 종류**
+
+-양방향 
+- 대칭키 - 이 프로젝트는 양방향 대칭키 방식 사용 : HS256
+- 비대칭키
+
+-단방향 
