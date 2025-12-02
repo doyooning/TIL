@@ -121,3 +121,41 @@ JWT의 특징은 내부 정보를 단순 BASE64 방식으로 인코딩하기 때
 - 비대칭키
 
 -단방향 
+
+**CORS 설정**
+- SecurityConfig
+- config > CorsMvcConfig
+
+**소셜 로그인 요청**
+![[Pasted image 20251202203939.png]]
+강의 : React
+나 : Vue.js
+
+프론트엔드 구현을 위해 Vue 프로젝트 생성
+
+App.vue
+```vue
+<script setup>  
+import axios from "axios";  
+  
+const onNaverLogin = () => {  
+  window.location.href = "http://localhost:8080/oauth2/authorization/naver"  
+}  
+  
+axios  
+    .get("http://localhost:8080/my", {withCredentials: true})  
+    .then((res) => {  
+      alert(JSON.stringify(res.data))  
+    })  
+    .catch((error) => alert(error))  
+</script>  
+  
+<template>  
+    <h1>Login</h1>  
+    <button @click="onNaverLogin">naver login</button>  
+</template>
+```
+
+백엔드에서 localhost:3000 -> localhost:5173으로 변경 !! (Vue) 
+실행하면 처음에 axios는 에러가 나는데(Network Error)
+로그인 버튼 누르면 네이버 로그인 잘 진행되는 것을 확인
