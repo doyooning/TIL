@@ -122,6 +122,15 @@ JWT의 특징은 내부 정보를 단순 BASE64 방식으로 인코딩하기 때
 
 -단방향 
 
+**로그인 성공**
+OAuth2 로그인이 성공하면 실행될 성공 핸들러를 커스텀해서 내부에 JWT 발급 구현
+
+**JWT 검증 필터**
+스프링 시큐리티 filter chain에 요청에 담긴 JWT를 검증하기 위한 커스텀 필터를 등록해야 함
+
+해당 필터를 통해 요청 쿠키에 JWT가 존재하는 경우 JWT를 검증하고 강제로 SecurityContextHolder에 세션을 생성 (이 세션은 STATLESS 상태로 관리되기 때문에 해당 요청이 끝나면 소멸됨)
+
+
 **CORS 설정**
 - SecurityConfig
 - config > CorsMvcConfig
@@ -159,3 +168,18 @@ axios
 백엔드에서 localhost:3000 -> localhost:5173으로 변경 !! (Vue) 
 실행하면 처음에 axios는 에러가 나는데(Network Error)
 로그인 버튼 누르면 네이버 로그인 잘 진행되는 것을 확인
+
+
+**무한 루프 오류가 발생할 경우**
+
+필터 위치에 따라 OAuth2 인증을 진행하는 필터보다 JWTFilter가 앞에 존재하는 경우 아래와 같은 오류가 발생할 수 있습니다.
+
+1. 재로그인
+
+2. JWT 만료 → 거절
+
+3. OAuth2 로그인 실패 → 재요청
+
+4. 무한 루프
+
+따라서 JWTFilter를 OAuth2LoginAuthenticationFilter 뒤에 위치 시키거나 JWTFilter 내부에 if문을 통해 특정 경로 요청은 넘어가도록 진행하면 됩니다.
