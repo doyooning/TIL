@@ -194,3 +194,41 @@ OpenAI와 Anthropic 각각의 API 클라이언트를 주입받아 독립적으�
 사용자 입력(`userInput`)과 프롬프트 옵션(`stop`, `temperature`)으로 Prompt 객체를 만든 뒤 모델들을 호출
 ChatResponse에는 모델의 응답 결과와 메타 정보가 담겨 반환됨
 
+---
+### RAG의 필요성과 개념
+
+**RAG** 
+외부 데이터를 검색하여 LLM에게 맥락을 제공함으로써, 더 정확하고 신뢰할 수 있는 답변을 생성하도록 도와주는 기술
+
+LLM은 아무리 뛰어난 모델이라도 학습한 지식 안에서만 답변할 수 있음 
+특정 기업의 사내 문서나 최신 법률처럼 외부 도메인 지식이 필요한 경우에는, 전혀 엉뚱한 답을 하거나 틀린 정보(Hallucination)를 말하기도 함
+
+이런 문제를 해결하기 위해 등장한 개념이 **RAG**(Retrieval-Augmented Generation)
+RAG는 외부 데이터를 검색해 LLM에게 맥락(Context)으로 제공함으로써, 보다 정확하고 신뢰할 수 있는 답변을 생성하도록 도움
+
+그리고 이 복잡한 RAG 파이프라인을 Spring 기반으로 깔끔하게 구현할 수 있게 도와주는 프레임워크가 바로 Spring AI라는 것
+
+### Spring AI로 구현하는 RAG 파이프라인
+
+![[Pasted image 20251206153640.png]]
+대표적인 RAG 흐름 : **데이터 색인(Data Indexing)**, **질의응답(Data Retrieval & Generation)**
+
+#### 1단계: 데이터 색인 (Data Indexing)
+
+==문서 청킹(Chunking) 단계:==
+PDF 또는 텍스트 문서를 업로드하고, 텍스트를 추출 및 정제한 후, LLM이 이해하기 좋은 단위로 청킹(Text Splitting)
+
+==벡터화 및 저장 단계:== 
+각 청크에 대해 임베딩을 생성하고, 메타데이터를 추가한 후, 벡터 저장소에 저장
+
+#### 2단계: 질의응답 (Data Retrieval & Generation)
+
+사용자의 질문을 벡터화하고, 유사한 문서 청크를 검색한 후, 검색된 문서를 LLM에게 컨텍스트로 전달하여 최종 응답을 생성
+
+### Spring AI의 장점과 핵심 컴포넌트
+
+![](https://oopy.lazyrockets.com/api/v2/notion/image?src=attachment%3A5546141e-f7b2-4880-a70f-777ca4d30a8a%3Aimage.png&blockId=1f1b25e3-2acc-8072-b937-db2b92e0b2ed)
+
+RAG 시스템을 직접 구현하려면 **텍스트 청킹 전략**, **임베딩 모델 연동**, **벡터 저장소 연동**, **메타데이터 기반 필터링**, **LLM 프롬프트 구성 및 요청 처리** 등 다양한 요소들을 직접 작성해야 함
+
+하지만 Spring AI는 이 복잡한 요소들을 **표준화된 컴포넌트로 추상화**해줍니다. 덕분에 개발자는 ==LLM 서비스 구현== 그 자체에 집중할 수 있고, ==인프라 구현 부담==은 크게 줄어들게 됨
