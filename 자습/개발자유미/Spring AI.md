@@ -381,3 +381,53 @@ public CityResponseDTO generate(String text) {
 
 원리 자체는 프롬프트 보낼 때, 내 포맷대로 만들어 주세요 → 이후 포맷으로 파싱
 현재 1.0.0이 나온지 얼마되지 않아 공식 문서 코드도 이상함(...)
+
+---
+### Agent와 Tools
+​
+에이전트란 목표가 주어지면, 그것을 이행하기 위해 LLM이 스스로 판단하여 행동을 수행하는 방식
+
+LLM이 문제를 해결하는 과정에서 외부의 도움이 필요하다고 판단하면, 필요한 도구(Tool)를 사용해 작업을 수행
+
+**- 툴 샘플**
+
+- 검색 툴
+- DB 조회 툴
+- 계산 툴
+- 코드 실행 툴
+- 시각화 툴
+- 등등
+
+**Tool 사용 동작 원리**
+
+![[Pasted image 20251207144830.png]]
+1. 사용자의 프롬프트와 툴 목록을 함께 보내줌
+2. LLM API가 사용자의 질문과 툴 목록을 확인 후, 특정 툴을 사용하겠다고 콜백을 줌
+3. 툴을 활용해서 데이터를 처리하거나 가져옴 (스프링 AI 어플리케이션에서 툴 실행)
+4. 툴 처리 완료
+5. 툴 실행 결과를 다시 LLM API에 제공
+6. LLM API 최종 응답
+
+**툴 등록**
+
+```java
+public class ChatTools {  
+    @Tool(description = "User personal information : name, age, address, phone, etc")  
+    public UserResponseDTO getUserInfoTool() {  
+        return new UserResponseDTO("홍길동", 20L, "서울특별시 강남구 강남대로 1", "010-0000-0000", "00000");  
+    }  
+}
+```
+
+
+**ChatClient 호출시 등록**
+
+```java
+return chatClient.prompt(prompt) 
+		.tools(new ChatTools()) 
+		.stream() 
+		.content() 
+		// 이하 생략
+```
+
+---
