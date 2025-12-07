@@ -2,6 +2,7 @@
 #Spring 
 
 ---
+### 개요
 **Spring AI**
 
 : LLM API를 활용한 여러 웹 시스템 (챗봇, 멀티모달, RAG)을 쉽게 구축하도록 도와주는 스프링 기반의 모듈
@@ -28,7 +29,7 @@ AI와 연관된 도구들을 쉽게 통합하도록 하는 프레임워크
 	- Neo4j
 	- PostgresML
 
-
+---
 **멀티턴 및 히스토리 (multi-turn)**
 
 여러 대화간의 문맥을 고려해 앞선 내용에 이어 응답할 수 있는 멀티턴 기능,
@@ -64,6 +65,7 @@ ChatMemoryRepository, 구현체는 InMemory, JDBC를 기본 제공
 2개의 저장소를 사용
 : 전체 히스토리 저장용, 멀티턴용 ChatMemoryRepository
 
+---
 **멀티턴 : ChatMemoryRepository Bean 등록**
 
 구현체 크게 2종류 (InMemory, JDBC) 
@@ -109,6 +111,11 @@ CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (
 ```
 
 
+**멀티턴 : Service단 Chat 메소드 수정**
+
+- domain > openai > repository > ChatRepository.java
+`public interface ChatRepository extends JpaRepository<ChatEntity, Long> { }`
+
 ```java
 public Flux<String> generateStream(String text) {  
   
@@ -148,3 +155,68 @@ public Flux<String> generateStream(String text) {
 }
 ```
 
+---
+### 히스토리 구현 JPA
+
+**JPA 의존성 추가 및 설정**
+
+**- build.gradle**
+
+implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+기존에 MySQL 드라이버와 DB연결은 진행했기 때문에 JPA만 추가
+
+**application.properties : ddl 설정 추가**
+
+```
+spring.jpa.hibernate.ddl-auto=update 
+spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl 
+spring.jpa.show-sql=true
+```
+dld-auto=update 적용되었는지 확인
+
+### Entity, Repository 생성
+
+- domain > openai > entity > ChatEntity.java, 
+- domain > openai > repository > ChatRepository.java
+
+### Service단 채팅 내역 추가
+
+- domain > openai > service > OpenAIService.java : 의존성 추가
+- domain > openai > service > OpenAIService.java : 챗 스트림 메소드
+
+- domain > openai > service > OpenAIService.java : 의존성 추가
+
+**조회 API 작성**
+
+저장한 전체 대화 내역을 조회하는 API
+
+- domain > openai > repository > ChatRepository.java : 커스텀 메소드 추가
+- `List<ChatEntity> findByUserIdOrderByCreatedAtAsc(String userId);`
+
+domain > openai > service > ChatService.java
+
+```java
+@Service 
+public class ChatService { 
+	private final ChatRepository chatRepository; 
+	public ChatService(ChatRepository chatRepository) { 
+		this.chatRepository = chatRepository; 
+	} 
+	@Transactional(readOnly = true) 
+	public List<ChatEntity> readAllChats(String userId) 
+	{ return chatRepository.findByUserIdOrderByCreatedAtAsc(userId); } 
+}
+```
+
+api > ChatController.java
+
+`private final ChatService chatService;` 추가
+```java
+@ResponseBody 
+@PostMapping("/chat/history/{userid}") 
+public List<ChatEntity> getChatHistory(@PathVariable("userid") String userId) { 
+	return chatService.readAllChats(userId); 
+}
+```
+
+---
