@@ -220,3 +220,164 @@ public List<ChatEntity> getChatHistory(@PathVariable("userid") String userId) {
 ```
 
 ---
+### ChatClient DSL Wrapper
+
+**- 기존 사용 : OpenAI 기준**
+`private final OpenAiChatModel openAiChatModel;`
+
+ChatClient를 활용하면 스프링 AI의 다양한 기능들을 함께 활용 가능
+openAiChatModel을 ChatClient에 Wrapping해서 사용
+
+**ChatClient**
+`ChatClient chatClient = ChatClient.create(openAiChatModel);`
+
+**Bean 등록 예시**
+
+```java
+@Configuration 
+public class ChatClientConfig {
+	 
+	@Bean 
+	public ChatClient openAiChatClient(OpenAiChatModel chatModel) { 
+		return ChatClient.create(chatModel); 
+	} 
+	
+	@Bean 
+	public ChatClient anthropicChatClient(AnthropicChatModel chatModel) { 
+		return ChatClient.create(chatModel); 
+	} 
+}
+```
+
+**Service 챗 스트림 메소드 수정**
+
+domain > openai > service > OpenAIService.java
+기존 openAiChatModel을 리턴했던 부분을 chatClient를 사용해서 바꿔줌
+
+```java
+// 요청 및 응답  
+return chatClient.prompt(prompt)  // 프롬프트 메기고
+        .stream()  // 스트림 사용해서
+        .content()  
+        .map(token -> {  
+            responseBuffer.append(token);  // responseBuffer : StringBuilder
+            return token;  // 버퍼에 담긴 응답 메시지 토큰들을 매핑
+        })  
+        .doOnComplete(() -> {  
+            // chatMemory 저장  
+            chatMemory.add(userId, new AssistantMessage(responseBuffer.toString()));  
+            chatMemoryRepository.saveAll(userId, chatMemory.get(userId));  
+  
+            // 전체 대화 저장용  
+            ChatEntity chatAssistantEntity = new ChatEntity();  
+            chatAssistantEntity.setUserId(userId);  
+            chatAssistantEntity.setType(MessageType.ASSISTANT);  
+            chatAssistantEntity.setContent(responseBuffer.toString());  
+  
+            chatRepository.saveAll(List.of(chatUserEntity, chatAssistantEntity));  
+        });
+```
+
+
+**ChatClient를 사용하는 이유**
+
+ChatClient로 감싼 객체를 통해 아래 기능들을 쉽게 추가 가능
+- ObservationRegistry : 로깅
+- tools : LLM에게 사용할 툴을 붙여줌
+- advisors : RAG
+- entity : 응답 데이터 객체 파싱 (call 메소드만)
+- 추상화 : 모델 변경되어도 동일한 메소드
+
+즉, 기존의 OpenAiChatModel 객체만으로는 가질 수 없는 여러 기능을 붙일 수 있음
+
+---
+**LLM 응답 구조화**
+
+LLM 응답을 자연어스러움에서 구조화하여 자바스러움의 객체로 응답을 받는 방법
+
+**응답을 객체로 담기 : 예상 시나리오**
+
+LLM에게 데이터를 만들라고 요청하는 경우가 많음
+
+정말 간단하게 특정 국가명을 보내면 국가에 속한 도시 N개를 데이터로 받는 로직
+DTO에 데이터가 담도록 구성하고 싶다면 Structured Output을 활용하면 됨
+
+담을 DTO : 
+```
+public record CityResponseDTO(List<String> city) { }
+```
+
+###### (추가) ​Record란?
+
+record는 “불변 데이터 객체”를 간단하게 만들고 싶을 때 쓰는 문법
+equals/hashCode/toString/getter/생성자까지 자동 생성
+
+1) **DTO, VO 같은 단순 데이터 전달용 객체**
+
+예: API 응답, 설정 값, DB 조회 결과 등  
+필드만 있고 로직은 거의 없는 객체
+
+2) **불변 객체를 만들고 싶을 때**
+
+record는 기본적으로 모든 필드가 `final`이고, 생성 후 값이 바뀌지 않음
+따라서 스레드 안전성도 자연스럽게 확보됨
+
+3) **데이터 중심의 구조를 표현할 때**
+
+예: 좌표, Range, Pair, Key-Value 등  
+값 자체가 객체의 정체성인 경우 record가 더 자연스러움
+
+4) **Lombok을 쓰기 싫거나 줄이고 싶을 때**
+
+`@Getter`, `@RequiredArgsConstructor`, `@EqualsAndHashCode` 같은 걸  
+record 하나로 대체 가능
+
+
+**Output 컨버터 등록**
+
+문장 형태로 받은 데이터를 DTO로 맞춰 넣기 위한 컨버터가 요구됨
+컨버터는 다양하게 제공됨
+
+**AbstractConversionServiceOutputConverter<>**
+
+추상 클래스, 상속해서 커스텀 컨버터 생성
+
+**AbstractMessageOutputConverter< T >**
+
+메시지 기반 변환 추상 클래스, 상속해서 커스텀 컨버터 생성
+
+**BeanOutputConverter< T >**
+
+DTO/Record/Bean 클래스 기반 자동 JSON 컨버터
+
+**MapOutputConverter**
+
+Map<String, Object> 기반 자동 컨버터
+
+**ListOutputConverter**
+
+List< T > 기반 자동 컨버터
+
+**적용**
+
+domain > openai > service > OpenAIService.java
+ 원래 컨버터 등록을 해야하지만 (DTO라 Bean 컨버터) 자동 타입 추론이 되기 때문에 명시하지 않아도 사용 가능 - 현재 미사용중인 InMemory 방식에 두현
+ 
+```java
+public CityResponseDTO generate(String text) { 
+	ChatClient chatClient = ChatClient.create(openAiChatModel); // 메시지 
+	SystemMessage systemMessage = new SystemMessage(""); 
+	UserMessage userMessage = new UserMessage(text); 
+	AssistantMessage assistantMessage = new AssistantMessage(""); // 옵션 
+	OpenAiChatOptions options = OpenAiChatOptions.builder() 
+			.model("gpt-4.1-mini") 
+			.temperature(0.7) 
+			.build(); 
+			// 프롬프트 Prompt prompt = new Prompt(List.of(systemMessage, userMessage, assistantMessage), options); 
+			// 요청 및 응답 return chatClient.prompt(prompt) 
+			.call() 
+			.entity(CityResponseDTO.class); }
+```
+
+원리 자체는 프롬프트 보낼 때, 내 포맷대로 만들어 주세요 → 이후 포맷으로 파싱
+현재 1.0.0이 나온지 얼마되지 않아 공식 문서 코드도 이상함(...)
