@@ -431,3 +431,19 @@ return chatClient.prompt(prompt)
 ```
 
 ---
+### RAG : Retrieval Augmented Generation
+
+**RAG**
+LLM에게 우리 도메인의 지식을 부여하기 위해 “사용자의 프롬포트”에 유사한 문서 N개(문서는 특정 도메인 데이터)를 뽑아 프롬프트에 붙여 보내는 기법
+
+**스프링 AI : Advisor**
+
+스프링 AI의 ChatClient advisors() 메소드는 RAG를 쉽게 통합할 수 있는 기능을 제공
+이 advisors() 메소드에는 VectorStore라는 객체를 넣어주어야 하는데 관련된 아래 의존성이 요구됨
+
+build.gradle > dependencies
+`implementation 'org.springframework.ai:spring-ai-advisors-vector-store'`
+
+위 의존성을 통해 advisor API를 추가하면 통합할 수 있는 어댑터는 활성화 되지만, 결국 RAG를 위한 DB 필요
+-> ElasticSearch 활용...?
+
