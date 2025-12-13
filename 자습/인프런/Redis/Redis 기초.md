@@ -219,3 +219,51 @@ public class RedisLettuceStringRange {
 2. CommandTemplate의 commandAction() 매개변수로 넘긴다
 3. 매개변수로 받은 CommandAction의 doInExecute()로 명령어 처리
 
+---
+**Practice 4.**
+
+```java
+// mset, mget  
+Map<String, String> map = new LinkedHashMap<>(); 
+for (int i = 0; i < 5; i++) {  
+    map.put(key + i, value + i);  
+}  
+redisCommands.mset(map);  
+  
+List<KeyValue<String, String>> mget = redisCommands.mget(map.keySet().toArray(new String[0]));  
+mget.stream().forEach(m -> {  
+    System.out.println("key = " + m.getKey() + ",value = ");  
+});
+```
+append : 기존의 문자열에 내용을 추가해줌
+getrange(key, start, end) : 문자열의 범위 지정, 전체 데이터 중 일부만 가져옴
+setrange(key, offset, value) : offset으로 설정한 문자열의 특정 위치부터 value의 전체 길이만큼 덮어씀
+
+mset과 mget
+: 다중 저장 및 조회
+
+장점 : 
+한 번의 네트워크 입출력으로 데이터를 가져오거나 저장할 수 있음
+
+단점 :
+한 번에 키를 너무 많이 전송하거나 데이터 사이즈가 너무 큰 경우 병목현상 발생 가능성
+-> 네트워크 대역폭에 따라 적절하게 사용 필요
+
+`Map<String, String> map = new LinkedHashMap<>(); `
+: 저장 순서 보장을 위해 LinkedHashMap 사용
+
+mset
+map을 입력받음 -> key-value 집합 입력하면 됨
+
+mget
+map 여러 개(배열) 불러옴 -> key-value를 list로 한 번에 가져옴
+
+`keySet()` : key들의 배열만 가져옴
+
+---
+**Practice 5.**
+
+```java
+
+```
+
