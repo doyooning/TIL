@@ -28,6 +28,9 @@ Redis Cli 실행
 Connection Health 체크:
 `ping` -> pong 뜨면 성공
 
+### String Type
+
+**Practice 1.**
 
 Redis에서 제공하는 기초 명령어
 보통 저장 명령어, 조회 명령어로 구분
@@ -114,5 +117,37 @@ Redis 사용이 완료되었으면 Connection 객체와 Redis Client 연결 해�
 connection.close();  
 redisClient.shutdown();
 ```
+
+**Practice 2.**
+
+```java
+String key = "lettuce:incr";  
+String value = "hello";  
+
+//        redisCommands.set(key, value);  
+redisCommands.flushdb();  
+
+// incr, decr  
+Long incr = redisCommands.incr(key);  
+System.out.println("incr = " + incr); // incr = 1
+
+Long decr = redisCommands.decr(key);  
+System.out.println("decr = " + decr); // decr = 0
+
+// incrby, decrby  
+Long incrby = redisCommands.incrby(key, 10);  
+System.out.println("incrby = " + incrby); // incrby = 10
+
+Long decrby = redisCommands.decrby(key, 20);  
+System.out.println("decrby = " + decrby); // decrby = -10
+```
+
+`redisCommands.flushdb();` : 현재 db 모든 키 삭제(실무에서 잘 사용 X)
+
+incr : 1씩 증가시킴
+decr : 1씩 감소시킴
+
+incrby = 정해진 값만큼 증가시킴
+decrby = 정해진 값만큼 감소시킴
 
 
