@@ -150,4 +150,72 @@ decr : 1씩 감소시킴
 incrby = 정해진 값만큼 증가시킴
 decrby = 정해진 값만큼 감소시킴
 
+**Practice 3.**
+
+Connection을 맺어주고, 다시 닫고 하는 중복되는 로직 발생
+-> 함수형 인터페이스, 람다를 이용한 대체 방법
+
+CommandAction.java
+```java
+@FunctionalInterface  
+public interface CommandAction {
+    void doInExecute(RedisCommands<String, String> redisCommands);  
+}
+```
+
+CommandTemplate.java
+```java
+public class CommandTemplate {  
+    public static void commandAction(CommandAction action) {  
+  
+        RedisClient redisClient = RedisClient.create(getRedisUri());  
+        StatefulRedisConnection<String, String> connection = redisClient.connect();  
+        RedisCommands<String, String> redisCommands = connection.sync();  
+  
+        action.doInExecute(redisCommands);
+  
+        connection.close();  
+        redisClient.shutdown();  
+  
+    }  
+	
+	// 중복 코드 발생 부분
+    public static RedisURI getRedisUri() {  
+        return RedisURI.builder()  
+                .withHost("localhost")  
+                .withPort(6379)  
+                .withDatabase(0)  
+                .build();  
+    }  
+}
+```
+
+CommandAction -> 실행에 대한 기능 정의, 구현 객체 필요
+CommandTemplate -> 중복 코드 관리
+
+`action.doInExecute(redisCommands);` : CommandAction 구현부
+
+```java
+public class RedisLettuceStringRange {  
+  
+    @Test  
+    public void substring() {  
+        CommandAction action = (redisCommands -> {  
+            String key = "lettuce:string";  
+            String value = "hello";  
+  
+            redisCommands.set(key, value);  
+  
+            String get = redisCommands.get(key);  
+            System.out.println("get = " + get);  
+        });  
+        CommandTemplate.commandAction(action);  
+    }  
+}
+```
+
+반복코드 대신 
+1. CommandAction을 만든다(실행할 Redis 명령어 등등)
+2. CommandTemplate의 commandAction() 매개변수로 넘긴다
+3. 매개변수로 받은 CommandAction의 doInExecute()로 명령어 처리
 
