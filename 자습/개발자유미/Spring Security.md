@@ -39,7 +39,7 @@ Spring Initializr(=Spring Boot) 프로젝트 생성
 
 controller / MainController.java 생성
 @Controller 해주고 안에 @GetMapping으로 메서드 아무거나 만들어줌
-```
+```java
 @Controller  
 public class MainController {  
   
@@ -78,7 +78,7 @@ ID : user / PW : 로그창에 발급해준 비밀번호 복붙
 (엄밀하게 정의하면 SecurityFilterChain 설정을 진행함)
 
 Securiy Config 클래스 기본 틀
-```
+```java
 @Configuration  
 @EnableWebSecurity  
 public class SecurityConfig {  
@@ -118,7 +118,7 @@ public class SecurityConfig {
 자동으로 로그인 페이지로 리다이렉팅 되지 않고 오류 페이지가 발생한다.
 
 위 문제를 해결하기 위해 Config 클래스를 설정하면 로그인 페이지 설정도 진행해야 한다.
-```
+```html
 <form action="/loginProc" method="post" name="loginForm">  
     <input id="username" type="text" name="username" placeholder="id"/>  
     <input id="password" type="password" name="password" placeholder="password"/>  
@@ -128,7 +128,7 @@ public class SecurityConfig {
 로그인 폼을 만들어준다.
 
 Config에 로그인 페이지에 대한 설정 진행
-```
+```java
 http.formLogin((auth) -> auth.loginPage("/login") // 로그인 페이지를 연결해줌  
                 .loginProcessingUrl("/loginProc") // 로그인이 완료되면 연결할 페이지  
                 .permitAll() // 로그인되면 permitAll 상태  
@@ -155,7 +155,7 @@ http.csrf((auth) -> auth.disable()); // CSRF는 잠시 비활성화
 - 해시
 
 SecurifyConfig.java에 추가
-```
+```java
 ...
 @Bean  
 public BCryptPasswordEncoder bCryptPasswordEncoder() {  
@@ -183,7 +183,7 @@ application.properties에 datasource 정보 넣어준다.
 ### 회원가입(join) 구현
 
 회원가입 페이지 생성(join.mustache)
-```
+```java
 ...
 <form action="/joinProc" method="post" name="joinForm">  
     <input type="text" name="username" placeholder="Username"/>  
@@ -195,7 +195,7 @@ application.properties에 datasource 정보 넣어준다.
 
 JoinDTO 객체 생성
 간단하게 회원가입시 입력받을 데이터(ID, PW) 정의
-```
+```java
 @Setter  
 @Getter  
 public class JoinDTO {  
@@ -205,7 +205,7 @@ public class JoinDTO {
 ```
 
 JoinController 생성
-```
+```java
 ...
 @Autowired  
 private JoinService joinService;  
@@ -236,7 +236,7 @@ GET으로 /join
 joinProcess에서 수행할 로직 구현
 => joinService 생성
 
-```
+```java
 @Autowired  
 private UserRepository userRepository;  
   
@@ -258,7 +258,7 @@ public void joinProcess(JoinDTO joinDTO) {
 => 회원 가입 프로세싱 과정에서 수행할 것
 
 UserEntity 생성
-```
+```java
 @Setter  
 @Getter  
 @Entity  
@@ -339,7 +339,7 @@ UserRepository에 추가: `UserEntity findByUsername(String username);`
 UserDetailsService 인터페이스를 통해서 사용자 정보를 가져와야 함
 우리가 자체적으로 아이디 중복 검사 로직을 만들 것이므로 인터페이스 구현체를 만들어줌
 -> CustomUserDetailsService.java
-```
+```java
 @Service  
 public class CustomUserDetailsService implements UserDetailsService {  
   
@@ -363,7 +363,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 Entity가 null이 아니면 CustomUserDetails 객체에 userEntity를 넘김
 
 CustomUserDetails.java
-```
+```java
 public class CustomUserDetails implements UserDetails {  
     private UserEntity userEntity;  
   
@@ -410,7 +410,7 @@ getAuthorities()는 권한 정보를 가져오는 메서드
 
 결과값 표시용 main.mustache 
 -> 변수 추가
-```
+```html
 <body>  
 main page  
 <hr>  
@@ -421,7 +421,7 @@ main page
 `{{id}}` : mustache 문법, model 객체 속성에서 id를 표시
 
 MainController.java
-```
+```java
 @GetMapping("/")  
 public String mainP(Model model) {  
         
@@ -470,7 +470,7 @@ application.properties에서
 동일한 아이디로 다중 로그인을 진행할 경우에 대한 설정 방법은 세션 통제를 통해 진행한다.
 
 SecurityConfig.java
-```
+```java
 ...
 http.sessionManagement((auth) -> auth  
                 .maximumSessions(5)  
@@ -492,7 +492,7 @@ maxSessionPreventsLogin(불린) : 다중 로그인 개수를 초과하였을 경
 위 그림처럼 해커가 서버에 접근해서 세션 쿠키를 획득하면 Admin 권한을 가지고 서버에 다시 접근할 수 있으므로 조치가 필요하다.
 세션 고정 공격을 보호하기 위한 로그인 성공시 세션 설정 방법은 sessionManagement() 메소드의 sessionFixation() 메소드를 통해서 설정할 수 있다.
 
-```
+```java
 ...
 http.sessionManagement((auth) -> auth.sessionFixation().changeSessionId());
 ...
@@ -523,7 +523,7 @@ POST 요청에서 프론트 설정
 : hidden 속성으로 csrf 토큰 추가
 
 login.mustache
-```
+```html
 <form action="/loginProc" method="post" name="loginForm">  
     <input id="username" type="text" name="username" placeholder="id"/>  
     <input id="password" type="password" name="password" placeholder="password"/>  
@@ -534,7 +534,7 @@ login.mustache
 
 Ajax 요청시
 HTML head 구획에 아래 요소 추가
-```
+```html
 <meta name="_csrf" content="{{_csrf.token}}"/> 
 <meta name="_csrf_header" content="{{_csrf.headerName}}"/>
 ```
@@ -546,7 +546,7 @@ GET 방식 로그아웃을 진행할 경우 설정 방법
 csrf 설정시 POST 요청으로 로그아웃을 진행해야 하지만 아래 방식을 통해 GET 방식으로 진행할 수 있다.
 
 SecurityConfig 클래스 로그아웃 설정
-```
+```java
 ...
 http.logout((auth) -> auth.logoutUrl("/logout")  
                 .logoutSuccessUrl("/"));
@@ -556,7 +556,7 @@ http.logout((auth) -> auth.logoutUrl("/logout")
 로그아웃 성공시 연결 URL : /
 
 LogoutController 생성
-```
+```java
 @Controller  
 public class LogoutController {  
     @GetMapping("/logout")  
@@ -593,7 +593,7 @@ JWT를 사용해서 토큰을 관리하는 경우도 동일.
 **InMemoryUserDetailsManager**
 [https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/in-memory.html](https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/in-memory.html)
 SecurityConfig에 추가 - filterChain 말고 밖에
-```
+```java
 @Bean  
 public UserDetailsService userDetailsService() {  
   
@@ -669,7 +669,7 @@ formLogin() 메소드 제거 후 httpBasic() 메소드를 통해 설정
 
 **계층 권한 메소드 등록**
 SecurityConfig에 추가
-```
+```java
 ...
 @Bean  
 public RoleHierarchy roleHierarchy() {  
@@ -686,7 +686,7 @@ C > B > A 관계 형성됨
 
 **메소드 적용을 통한 ROLE 적용**
 SecurityConfig의 filterChain 수정
-```
+```java
 ...
         http.authorizeHttpRequests((auth) -> auth  
                         .requestMatchers("/login").permitAll()  
