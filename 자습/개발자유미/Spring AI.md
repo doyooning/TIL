@@ -447,3 +447,76 @@ build.gradle > dependencies
 위 의존성을 통해 advisor API를 추가하면 통합할 수 있는 어댑터는 활성화 되지만, 결국 RAG를 위한 DB 필요
 -> ElasticSearch 활용...?
 
+---
+ElasticSearch 대신 RedisVL 사용
+(Redis에서 제공하는 Vector Store 활용)
+
+**응용 AI**
+
+LLM API를 활용하다보면 데이터로 사용하기 위해 문서를 불러와야하는 경우가 많음
+스프링 AI의 ETL 파이프라인 중 Document Reader 부분을 통해 문서별 Reader 객체 알아보기
+
+[https://docs.spring.io/spring-ai/reference/api/etl-pipeline.html](https://docs.spring.io/spring-ai/reference/api/etl-pipeline.html)
+
+ETL 파이프라인은 데이터를  `Extract → Transfer → Load` 하는 일련의 과정을 말함
+ETL은 기존 데이터 분야에서 이미 사용되는 용어이며, 
+응용 AI에서는 RAG를 구축하기 위해, 
+내 데이터로 부터 다른 데이터를 만들기 위해 위의 과정을 활용
+
+스프링 AI에서는 각 과정을 interface와 기본 구현체로 제공함
+-> 공식문서 참조..
+
+**스프링 AI ETL 사용?**
+
+ETL 자체는 기존에도 관련 도구들이 많고 스프링 배치로도 충분히 좋은 퍼포먼스를 가질 수 있어, 
+모든 요소를 스프링 AI 모듈 기반으로 사용하지는 않고, Extract의 여러 DocumentReader 들을 응용해봄
+
+
+**- Extract : Reader 구현체를 위한 의존성 추가**
+
+```
+implementation 'org.springframework.ai:spring-ai-markdown-document-reader' 
+implementation 'org.springframework.ai:spring-ai-pdf-document-reader' 
+implementation 'org.springframework.ai:spring-ai-tika-document-reader'
+```
+
+
+**- 스프링 AI DocumentReader 구현체**
+
+- JsonReader
+- TextReader
+- JsoupDocumentReader
+- MarkdownDocumentReader
+- PagePdfDocumentReader
+- ParagraphPdfDocumentReader
+- TikaDocumentReader (DOCX, PPTX, …)
+
+**대략적인 적용법**
+
+- resources 경로에 파일 업로드 (Controller로 받아도 무방)
+
+- Reader 구현체 컴포넌트 등록
+
+```java
+@Component 
+public class MyJsonReader { 
+	private final Resource resource; 
+	public MyJsonReader(@Value("classpath:data.PageCollection.json") Resource resource) { 
+		this.resource = resource; 
+	} 
+	public List<Document> loadJsonAsDocuments() { 
+		JsonReader jsonReader = new JsonReader(this.resource, "_id"); 
+		return jsonReader.get(); 
+	} 
+}
+```
+
+import시 비슷한 클래스 이름들이 많은데, 거의 ai path가 들어간 모듈들을 찾으면 됨
+
+**- 활용**
+`return myJsonReader.loadJsonAsDocuments();`
+
+=> 개발자 유미 방식
+
+
+**​**
