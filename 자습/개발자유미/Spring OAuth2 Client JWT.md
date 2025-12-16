@@ -172,14 +172,16 @@ axios
 
 **무한 루프 오류가 발생할 경우**
 
-필터 위치에 따라 OAuth2 인증을 진행하는 필터보다 JWTFilter가 앞에 존재하는 경우 아래와 같은 오류가 발생할 수 있습니다.
+필터 위치에 따라 OAuth2 인증을 진행하는 필터보다 JWTFilter가 앞에 존재하는 경우 아래와 같은 오류가 발생할 수 있음
 
 1. 재로그인
-
 2. JWT 만료 → 거절
-
 3. OAuth2 로그인 실패 → 재요청
-
 4. 무한 루프
 
-따라서 JWTFilter를 OAuth2LoginAuthenticationFilter 뒤에 위치 시키거나 JWTFilter 내부에 if문을 통해 특정 경로 요청은 넘어가도록 진행하면 됩니다.
+따라서 JWTFilter를 OAuth2LoginAuthenticationFilter 뒤에 위치 시키거나 JWTFilter 내부에 if문을 통해 특정 경로 요청은 넘어가도록 진행하면 됨
+
+```
+io.jsonwebtoken.ExpiredJwtException: JWT expired 253932 milliseconds ago at 2025-12-16T11:33:08.000Z. Current time: 2025-12-16T11:37:21.932Z. Allowed clock skew: 0 milliseconds.
+...
+```
