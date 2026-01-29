@@ -17,3 +17,26 @@ JPA 표준 스펙에 의해 상황에 따라 "1+N"이라는 문제 존재
 하나의 쿼리로 조회가 가능한 상황이지만, 
 JPA 구현체는 1개 + N개의 쿼리로 조회하는 문제
 
+# 실습 환경
+
+**연관 관계 구조**
+연습용 연관 관계는 “국가” : “도시” = 1 : N 형태의 JOIN
+따라서 “korea”라는 하나의 CountryEntity에
+“seoul”, “busan”과 같은 CityEntity가 연관됨
+
+CityEntity
+```java
+@ManyToOne  
+private CountryEntity countryEntity;
+```
+​
+CountryEntity
+```java
+@OneToMany(mappedBy = "countryEntity")  
+private List<CityEntity> cityEntities = new ArrayList<>();
+```
+
+
+# 1+N 발생 상황
+**연관 관계 데이터 확인 case**
+![[Pasted image 20260129214520.png]]
