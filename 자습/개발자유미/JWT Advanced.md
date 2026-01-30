@@ -4,12 +4,8 @@
 #JWT
 
 ---
-https://cafe.naver.com/xxxjjhhh/94
+https://cafe.naver.com/xxxjjhhh/347
 개발자 유미 강의 참조
-
-https://spring.io/guides/gs/securing-web
-스프링 시큐리티 공식 문서 가이드
-
 
 ### 토큰 사용 추적
 

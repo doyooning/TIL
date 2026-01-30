@@ -2,7 +2,7 @@
 #Spring 
 
 ---
-https://cafe.naver.com/xxxjjhhh
+https://cafe.naver.com/xxxjjhhh/229
 개발자 유미 강의 참조
 
 

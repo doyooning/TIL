@@ -4,11 +4,9 @@
 #OAuth
 
 ---
-https://cafe.naver.com/xxxjjhhh/94
+https://cafe.naver.com/xxxjjhhh/293
 개발자 유미 강의 참조
 
-https://spring.io/guides/gs/securing-web
-스프링 시큐리티 공식 문서 가이드
 
 **실습 목표**
 

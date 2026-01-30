@@ -4,12 +4,8 @@
 #OAuth
 
 ---
-https://cafe.naver.com/xxxjjhhh/94
+https://cafe.naver.com/xxxjjhhh/277
 개발자 유미 강의 참조
-
-https://spring.io/guides/gs/securing-web
-스프링 시큐리티 공식 문서 가이드
-
 
 ### 동작 원리
 ![[Pasted image 20251120082519.png]]
