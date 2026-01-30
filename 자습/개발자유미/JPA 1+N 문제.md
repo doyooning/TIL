@@ -88,3 +88,52 @@ JPA의 find 관련 메소드들은 해당 Entity 테이블 데이터만 가져�
 
 따라서 find로 찾은 특정 Entity의 연관된 다른 테이블 Entity는 접근시 무조건 추가 조회를 통해 가져옴
 (연관 데이터를 사용할지 모르는 상황에서 가져오는 것은 자원적 소모가 있음)
+
+**의문점은**
+3강에서 각 case별 쿼리 개수 테스트를 수행할 때,
+가져온 Entity에서 연관된 Entity에 접근하지 않는 상황에 대해 아래와 같은 의문이 있음
+
+- ManyToOne : 접근하지 않아도 연관쪽 쿼리가 날라감
+- OneToMany : 접근하지 않으면 연관쪽은 안날라감
+
+**Lazy, Eager**
+동일하게 접근하지 않았지만, 추가 쿼리의 발생 여부는 JPA Lazy, Eager 로딩 설정 때문
+
+- Lazy 로딩 : 연관에 접근하지 않는다면 가져오지 않음
+- Eager 로딩 : 연관에 접근하지 않아도 추가 쿼리로 먼저 가져옴
+
+**JPA JOIN별 default 값**
+
+- OneToOne : Eager
+- ManyToOne : Eager
+- OneToMany : Lazy
+
+**ManyToOne Lazy 명시**
+기존 Eager가 default인 ManyToOne Lazy 설정
+
+CityEntity
+```java
+@ManyToOne(fetch = FetchType.LAZY) 
+private CountryEntity countryEntity;
+```
+
+**기타**
+Lazy, Eager 설정 모두 연관에 대한 추가 쿼리를 나중에 할 지, 지금 할 지 결정하는 것으로 
+1+N 쿼리를 1 쿼리로 대체할 수 있는 것은 아님
+
+# 연관 관계 쿼리 단일화
+**JPA 쿼리 단일화**
+JPA에서 Entity 조회 후 연관된 Entity 접근시 발생하는 추가 쿼리를 단건의 쿼리로 단일화
+단일화 방법은 여러가지가 존재하지만, 장단점이 있음
+
+1. JPQL @Query로 JOIN FETCH 작성
+2. QueryDSL로 fetchJoin()
+3. @EntityGraph
+4. Lazy 쪽 조회시 Batch 설정을 통한 IN절
+
+이 중 가장 많이 사용되는 JPQL @Query 작성에 대해 알아봄
+
+**JPQL**
+JPQL은 JPA에서 Entity(객체) 기반으로 SQL 쿼리를 사용할 수 있는 방법
+Spring Data JPA 의존성에서 `@Query("")` 어노테이션을 통해 Repository에서 JPQL을 쉽게 다룰 수 있음
+
