@@ -278,7 +278,11 @@ Hibernate는 가져온 이 SQL 데이터를 Java 객체로 변환 시키는 과�
 **1개의 OneToMany fetch는 하는데?**
 
 기준인 CountryEntity를 id 기반 (hashCode 및 equals)로 처리 후 CityEntity는 중복이 있을 수 없음
+	ManyToOne에서는 하나의 데이터만 존재하게 되니까(서울, 부산, 진주) 가능
+
 하지만, OneToMany가 2개 이상인 경우 CityEntity에 중복이 있을 수 있음
+	하나의 Country에 중복되는 City가 생김(korea, seoul 조합이 2개) 
+	-> fetch를 수행하지 않음
 
 - 하나의 OneToMany 연관이라면 
 	CountryEntity 중복을 제거 시키고 연관된 CityEntity는 어차피 중복이 없음
@@ -307,7 +311,7 @@ private Set<ReligionEntity> religionEntities = new HashSet<>();
 
 **해결 2 : 한쪽만 fetch 나머지 in절**
 우선 한쪽 OneToMany는 기존과 같이 fetch로 유지
-
+다른 한쪽은 fetch만 제거 -> 단순 Lazy로 처리
 나머지쪽은 단순 Lazy로 두면 1+N 문제가 동일하게 발생하기 때문에 
 Batch 설정을 통한 IN 절 처리를 수행
 ```java
@@ -316,4 +320,68 @@ Batch 설정을 통한 IN 절 처리를 수행
 
 이렇게 하면 1+N 쿼리는 아니지만 1+소수 개의 쿼리로 문제를 해결할 수 있음 
 (배치 사이즈는 250~500)
+
+# 페이지네이션 문제
+**OneToMany fetch시 페이지네이션**
+대량의 데이터를 한 페이지에 로딩하기 하기 어렵기 때문에 페이지네이션을 활용
+
+- 페이지네이션 예시 (테스트용 코드)
+```java
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+Pageable pageable = PageRequest.of(0, 5);
+```
+
+- Repository에도
+```java
+@Query("SELECT co FROM CountryEntity co " +
+"LEFT JOIN FETCH co.cityEntities ci")
+List<CountryEntity> findAllFetch(Pageable pageable);
+```
+
+문제는 One쪽 Entity 기준으로,
+OneToMany fetch시 페이지네이션을 함께 수행하면 아래와 같은 경고가 발생
+```
+WARN 1496 --- [1plusNtest] [nio-8080-exec-5] org.hibernate.orm.query                  : HHH90003004: firstResult/maxResults specified with collection fetch; applying in memory
+```
+
+위 WARN 경고는 페이지네이션을 SQL : LIMIT OFFSET 절로 수행하는 것이 아니라, 
+스프링 측에 모든 데이터를 다 가져온 뒤 진행한다는 의미
+-> 자원 낭비
+
+**fetch시 페이지네이션 문제 해결 방법**
+우선 OneToMany 기준으론 없음...
+@Query("")에 직접 LIMIT OFFSET 구문을 주는 방법도 불가능(번역 불가로 지원 안함)
+
+그래서 매번 전체 데이터를 스프링단으로 로딩 후, 
+스프링에서 페이지네이션 값 만큼 가져와야 함
+
+**해결 : batch in절**
+해결 방법
+join fetch를 걷어내고 batch in 절을 사용
+
+batch in 절은 1+N 개의 쿼리 중 N개의 쿼리에 대해 batch 단위로 묶어 1+소수개의 쿼리로 성능을 최적화 하는 방법
+
+
+**참고**
+상황에 따라 아래 case별로 잘 사용해야 함
+(전제는 OneToMany 상황에서, List< One > 기준)
+
+**1. 단순하게 List< One > 목록만 보여주고 연관된 Many 접근 안함**
+ 접근 안하기 때문에 Lazy 로딩 사용해도 무방
+
+**2. List< One > 목록 및 각 연관 Many 접근 함**
+케이스가 나뉨
+
+- 페이지네이션이 들어감
+	@BatchSize를 통한 IN절 쿼리 수행
+
+- 다중 OneToMany 상황에서 각각의 OneToMany 데이터가 다 필요함
+	하나만 join fetch, 나머지는 @BatchSize를 통한 IN절 쿼리 수행 
+	또는 
+	전체 @BatchSize를 통한 IN절 쿼리 수행
+
+- SQL 조건으로 가져온 데이터가 다 필요한 경우 또는 List< One >의 size가 작고 연관 접근 케이스
+	join fetch 사용
 
