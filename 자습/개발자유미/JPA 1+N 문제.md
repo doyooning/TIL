@@ -208,3 +208,112 @@ List<CountryEntity> findAllFetch();
 	부모 + 교집합이면 조회 됨
 
 # 다중 OneToMany 문제
+**DB 설계시**
+DB 테이블 설계시 
+하나의 Entity에 대해 OneToMany가 2개 이상 들어갈 경우가 많음
+
+- Entity 예시
+```java
+@Entity
+@Getter
+@Setter
+public class CountryEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true)
+    private String country;
+
+    @OneToMany(mappedBy = "countryEntity")
+    private List<CityEntity> cityEntities = new ArrayList<>();
+
+    public void addCityEntity(CityEntity cityEntity) {
+        cityEntities.add(cityEntity);
+        cityEntity.setCountryEntity(this);
+    }
+
+    @OneToMany(mappedBy = "countryEntity")
+    private List<ReligionEntity> religionEntities = new ArrayList<>();
+
+    public void addReligionEntity(ReligionEntity religionEntity) {
+        religionEntities.add(religionEntity);
+        religionEntity.setCountryEntity(this);
+    }
+}
+```
+
+**FETCH 조회시 문제**
+2개 이상의 OneToMany를 FETCH 조회할 경우도 생김
+
+- JPQL
+```java
+@Query("SELECT co FROM CountryEntity co " +
+"LEFT JOIN FETCH co.cityEntities ci " +
+"LEFT JOIN FETCH co.religionEntities re")
+List<CountryEntity> findAllFetch();
+```
+
+이때 findAllfetch() 메소드 동작시 아래와 같은 예외가 발생
+![[Pasted image 20260131124350.png]]
+**- 문제는**
+JPA 구현체 중 하나인 Hibernate는 2개 이상의 OneToMany fetch를 강제로 막고 있음
+
+**- 이유는**
+CountryEntity를 기준으로 : 
+City, Religion Entity가 각각 OneToMany로 연관되어 있고 
+실제 데이터는 아래와 같다고 가정
+![[Pasted image 20260131124723.png]]
+Country : 1개
+City : 3개
+Religion : 2개
+
+이를 SQL로 JOIN해서 가져온 결과는
+Country를 기준으로 나머지 Religion, Country, City 데이터가 곱셈 복제가 됨
+![[Pasted image 20260131125117.png]]
+Hibernate는 가져온 이 SQL 데이터를 Java 객체로 변환 시키는 과정에서 중복을 제거해야 하는데,
+중복을 제거하는 조건이 까다로워 이 자체를 막아둠
+
+**1개의 OneToMany fetch는 하는데?**
+
+기준인 CountryEntity를 id 기반 (hashCode 및 equals)로 처리 후 CityEntity는 중복이 있을 수 없음
+하지만, OneToMany가 2개 이상인 경우 CityEntity에 중복이 있을 수 있음
+
+- 하나의 OneToMany 연관이라면 
+	CountryEntity 중복을 제거 시키고 연관된 CityEntity는 어차피 중복이 없음
+
+- 하지만 OneToMany가 2개라면 
+	CityEntity가 ReligionEntity 때문에 중복이 생겨 있음
+	Hibernate는 List에 대해 설계 원칙을 위반하지 못하기 때문에 
+	List< CityEntity >에 대해 중복 제거를 못함
+
+**해결 1 : Set**
+권장하는 방법은 아님 주의
+기준 Entity의 OneToMany 연관 필드를 List<>가 아닌 Set<> 화 시키는 방법
+```java
+@OneToMany(mappedBy = "countryEntity")
+private Set<CityEntity> cityEntities = new HashSet<>();
+    
+@OneToMany(mappedBy = "countryEntity")
+private Set<ReligionEntity> religionEntities = new HashSet<>();
+```
+
+단점으로는 Set의 특성을 이해하면 됨
+
+1. Set은 순서 보장 불가
+2. Set을 호출하며 발생하는 중복 제거 체킹 자원 발생
+3. 정확한 Id기반 hashCode equals 구현 필요
+
+**해결 2 : 한쪽만 fetch 나머지 in절**
+우선 한쪽 OneToMany는 기존과 같이 fetch로 유지
+
+나머지쪽은 단순 Lazy로 두면 1+N 문제가 동일하게 발생하기 때문에 
+Batch 설정을 통한 IN 절 처리를 수행
+```java
+@BatchSize(size = 250)
+```
+
+이렇게 하면 1+N 쿼리는 아니지만 1+소수 개의 쿼리로 문제를 해결할 수 있음 
+(배치 사이즈는 250~500)
+
