@@ -127,13 +127,84 @@ JPA에서 Entity 조회 후 연관된 Entity 접근시 발생하는 추가 쿼�
 단일화 방법은 여러가지가 존재하지만, 장단점이 있음
 
 1. JPQL @Query로 JOIN FETCH 작성
+	SQL문을 직접 작성하기 때문에 런타임 에러 등이 발생할 수 있음
 2. QueryDSL로 fetchJoin()
+	JPQL을 고도화시킴
 3. @EntityGraph
 4. Lazy 쪽 조회시 Batch 설정을 통한 IN절
+	N개 쪽에서 N개 전부 가져오지 않고 적당히 나눠서 IN절로 처리
 
-이 중 가장 많이 사용되는 JPQL @Query 작성에 대해 알아봄
+이 중 실무에서 가장 많이 사용되는 JPQL @Query 작성에 대해 알아봄
 
 **JPQL**
 JPQL은 JPA에서 Entity(객체) 기반으로 SQL 쿼리를 사용할 수 있는 방법
 Spring Data JPA 의존성에서 `@Query("")` 어노테이션을 통해 Repository에서 JPQL을 쉽게 다룰 수 있음
 
+**JPQL JOIN FETCH 쿼리 작성**
+
+- 쿼리 작성
+```java
+@Query("SELECT co FROM CountryEntity co " +
+		"JOIN FETCH co.cityEntities ci")
+List<CountryEntity> findAllFetch();
+```
+보통은 쿼리 작성시 객체 이름은 객체 앞글자를 따서 소문자로 작성
+여기서는 겹치니까 co, ci로 작성
+
+- 서비스단 사용
+```java
+public List<CountryEntity> readCountryFetch() {
+    return countryRepository.findAllFetch();
+}
+```
+
+- 컨트롤러단 수정
+```java
+@GetMapping("/read/one/child")
+public String readOneChild(Model model) {
+    model.addAttribute("COUNTRYLIST", countryService.readCountryFetch());
+    return "readOneChild";
+}
+```
+
+# JOIN FETCH, LEFT JOIN FETCH
+
+**JOIN FETCH 데이터 누락**
+JOIN FETCH 구문 작성시 누락되는 데이터가 존재
+
+OneToMany와 같은 JOIN 상황에서 
+One은 존재하지만, 연관된 Many가 0개인 경우
+이 경우 One쪽도 함께 조회되지 않는 데이터 누락 문제가 발생
+
+**- 예시**
+예제에서 CountryEntity 데이터에 물린 CityEntity가 없는 경우 
+findAll (JPQL로 작성)로 찾은 List< CountryEntity >에 해당 CountryEntity가 포함되지 않음
+
+- 상황 만들기
+	CountryEntity에 "germany" 국가 데이터를 추가하고 연관된 City는 추가하지 않은 경우
+
+**해결 방법**
+- 기존 SQL 구문
+```java
+@Query("SELECT co FROM CountryEntity co " +
+"JOIN FETCH co.cityEntities ci")
+List<CountryEntity> findAllFetch();
+```
+
+- 변경: LEFT 추가
+```java
+@Query("SELECT co FROM CountryEntity co " +
+"LEFT JOIN FETCH co.cityEntities ci")
+List<CountryEntity> findAllFetch();
+```
+
+**원리**
+- JOIN FETCH
+	: INNER JOIN
+	연관된게 있는 교집합이어야 조회 됨
+
+- LEFT JOIN FETCH
+	: LEFT OUTER JOIN
+	부모 + 교집합이면 조회 됨
+
+# 다중 OneToMany 문제
