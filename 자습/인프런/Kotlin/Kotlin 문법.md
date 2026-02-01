@@ -83,3 +83,69 @@ reader.next()
 Scanner : new를 사용하지 않고 생성 
 in은 코틀린에서 사용할 수 없는 키워드
 이런 키워드들은 백틱으로 감싸주는 방식으로 사용 가능
+
+
+##### **조건문**
+if문은 when문으로 그대로 치환 가능
+switch문과 유사하나 훨씬 더 강력한 조건들을 지정 가능
+```kotlin
+when {
+	i > 10 -> {
+		print("10보다 크다)
+	}
+	i > 5 -> {
+		print("5보다 크다")
+	}
+	else -> {
+		print("")
+	}
+}
+```
+
+코틀린에서는 조건문을 식으로 취급
+= 리턴값을 받아서 쓸 수 있다
+```kotlin
+var result = when {
+	i > 10 -> {
+		print("10보다 크다)
+	}
+	i > 5 -> {
+		print("5보다 크다")
+	}
+	else -> {
+		print("!!")
+	}
+}
+print(result) // !!
+```
+
+삼항 연산
+```kotlin
+val result = if (i > 10) true else false
+```
+
+
+##### **반복문**
+리스트 정의
+`listOf(...)`
+
+리스트 반복하기
+```kotlin
+val items = listOf(1, 2, 3, 4, 5)
+items.forEach { items ->
+	print(item)
+}
+```
+
+`for i in items.length ... ` 표현식
+```kotlin
+for (i in 0..(items.size - 1)) {
+	print(items[i])
+}
+// 이건 자바가 더 쉬운듯
+```
+
+while문은 자바와 동일
+break, continue 동일
+
+
