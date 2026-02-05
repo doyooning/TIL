@@ -149,3 +149,74 @@ while문은 자바와 동일
 break, continue 동일
 
 
+**List**
+```kotlin
+val items1 = listOf(1, 2, 3, 4, 5) // 수정 불가
+val items2 = mutableListOf(1, 2, 3, 4, 5) // 수정 가능
+items2.add(5)
+items2.remove(3)
+```
+
+Generic 타입 추론은 생략되는 형태임
+(타입 추론은 생략 가능)
+
+```kotlin
+val items : MutableList<Int> = mutableListOf(1, 2, 3, 4, 5)
+// ArrayList같은 느낌
+```
+
+
+**Array**
+배열 정의
+`arrayOf(...)`
+
+활용 예시
+```kotlin
+val items = arrayOf(1, 2, 3)
+items[0] = 10
+```
+
+
+**예외 처리**
+크게 다른 것 없음 거의 동일
+
+```kotlin
+val items = listOf(1, 2, 3)
+try {
+	val item = items[4]
+} catch (e: Exception) { // kotlin의 Exception을 import
+	print(e.message)
+}
+```
+
+
+**Null Safety**
+중요 !
+
+```kotlin
+fun main() {
+	var name: String? = null
+	name = "도윤"
+	var name2: String = ""
+	// name2 = name -> 타입이 다르기 때문에 불가
+
+}
+```
+
+코틀린에서 null을 넣을 수 있는 타입은 '타입 뒤에 물음표 기호'를 넣어 줘야지만 null을 대입 가능
+null 체크 타입들은 체크 후 null이 아닌 경우 타입으로 변환이 됨
+
+타입이 물음표가 붙은 것과 안 붙은 것은 별개의 타입으로 취급됨
+물음표를 떼는 방법은 
+
+1. '느낌표 2개'를 붙여 개발자가 강제로 해제 가능 
+	개발자가 임의로 null 아님을 보증한 느낌, 에러가 나면 개발자 책임 ... 좋지 않음
+2. 코틀린 제공 내장 함수 활용
+```kotlin
+name?.let { // it:String (it으로 name접근 가능)
+	name2 = name
+}
+```
+
+
+
