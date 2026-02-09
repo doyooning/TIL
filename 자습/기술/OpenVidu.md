@@ -1,16 +1,23 @@
 #WebRTC
 
 ---
-출처: https://savingbe.tistory.com/22
+출처: https://savingbe.tistory.com/22 | https://stonesy927.tistory.com/288
 
 # WebRTC
-WebRTC(Web Real-Time Communication)
+###### WebRTC(Web Real-Time Communication)
 웹 브라우저와 기기 간 실시간 음성, 텍스트 및 화상 통신을 가능하도록 하는 오픈소스 프로젝트
 웹 브라우저를 통해 직접 P2P 통신을 하기 때문에, 
 통신을 이용하는 기기에서는 추가적인 플러그인이나 어플리케이션을 설치하지 않아도 통신이 가능
 
 WebRTC는 서버와 peer의 형태가 어떻게 되어있느냐에 따라 Mesh, SFU, MCU같은 형식으로 나뉘고, 
 서버를 구축할 때에는 시그널링 서버, STUN 서버, TURN 서버 등을 만들어야 하는 번거로움이 있음
+
+###### SFU방식
+![[Pasted image 20260209194732.png]]
+각 peer는 Server에게만 자신의 stream을 보내며, 
+서버는 해당 stream을 다른 client들에게 전송
+(1개의 uplink와 N-1개에 해당하는 downlink)
+
 # OpenVidu
 WebRTC를 기반으로 여러 화상통화 서비스를 개발하기 편하게 해주는 플랫폼
 [LiveKit](https://livekit.io/)이라는 WebRTC infrastructure를 기반으로 함
