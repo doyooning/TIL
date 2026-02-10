@@ -45,14 +45,13 @@ docker run -d \
 (docker desktop이면 이미지에서 컨테이너 생성 가능)
 
 
-### Docker Compose
 **도커 서버 켜기/끄기**
 ```
 docker compose up -d
 docker compose down
 ```
 
-
+---
 # Redis CLI
 **인덱스 지우기**
 ```
@@ -135,8 +134,7 @@ sudo apt install -y curl bash
 sudo usermod -aG docker $USER
 ```
 
-WSL 재시작 필요
-
+**WSL 재시작**
 PowerShell에서 
 ```powershell
 wsl --shutdown
@@ -156,42 +154,4 @@ docker ps
 ```
 
 컨테이너 목록 출력되면 성공
-
-###### OpenVidu 설치
-```bash
-curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_openvidu_latest.sh | bash
-```
-
-자동으로 openvidu 디렉토리 생성하므로 그냥 /home/dynii에서 바로 실행하면 됨
-docker desktop이 실행된 상태에서 명령어 실행해야 함
-
-**.env 파일 수정**
-```env
-# OpenVidu 서버 비밀번호 (중요)
-OPENVIDU_SECRET=MY_SECRET_KEY
-
-# 로컬에서는 https 인증서 필요 없음
-DOMAIN_OR_PUBLIC_IP=localhost
-
-# HTTPS 비활성화 (로컬 개발용)
-CERTIFICATE_TYPE=none
-
-# 포트
-HTTP_PORT=4444
-HTTPS_PORT=443
-
-# 녹화 사용 안 하면 false
-OPENVIDU_RECORDING=false
-```
-
-OpenVidu가 정상 실행된 상태
-```powershell
-PS C:\Users\dynii> docker ps
-CONTAINER ID   IMAGE                                COMMAND                  CREATED         STATUS                          PORTS                                                                                      NAMES
-a8510857acce   openvidu/openvidu-proxy:2.32.1       "/docker-entrypoint.…"   5 minutes ago   Restarting (0) 56 seconds ago                                                                                              openvidu-nginx-1
-328b3373f7f1   openvidu/openvidu-call:2.32.1        "docker-entrypoint.s…"   5 minutes ago   Up 5 minutes                                                                                                               openvidu-app-1
-d910c689e46b   openvidu/openvidu-coturn:2.32.1      "docker-entrypoint.s…"   5 minutes ago   Up 5 minutes                    0.0.0.0:3478->3478/tcp, 0.0.0.0:3478->3478/udp, [::]:3478->3478/tcp, [::]:3478->3478/udp   openvidu-coturn-1
-d23febd61a98   openvidu/openvidu-server:2.32.1      "/usr/local/bin/entr…"   5 minutes ago   Up 5 minutes                                                                                                               openvidu-openvidu-server-1
-56f9961eb00b   kurento/kurento-media-server:7.3.0   "/entrypoint.sh"         5 minutes ago   Up 5 minutes (healthy)                                                                                                     openvidu-kms-1
-```
 
