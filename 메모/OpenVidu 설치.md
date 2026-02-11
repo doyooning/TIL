@@ -11,24 +11,14 @@ curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_openvidu_latest.
 자동으로 openvidu 디렉토리 생성하므로 그냥 /home/dynii에서 바로 실행하면 됨
 docker desktop이 실행된 상태에서 명령어 실행해야 함
 
-**.env 파일 수정**
-```env
-# OpenVidu 서버 비밀번호 (중요)
-OPENVIDU_SECRET=MY_SECRET_KEY
+**1. .env 파일 수정**
 
-# 로컬에서는 https 인증서 필요 없음
-DOMAIN_OR_PUBLIC_IP=localhost
+**2. docker-compose.override.yml, docker-compose.yml 파일 수정**
 
-# HTTPS 비활성화 (로컬 개발용)
-CERTIFICATE_TYPE=none
+**3. default.conf 파일 호스트로 복사 및 수정**
 
-# 포트
-HTTP_PORT=4444
-HTTPS_PORT=443
+**4. localhost:4443/dashboard 접속해서 테스트 진행**
 
-# 녹화 사용 안 하면 false
-OPENVIDU_RECORDING=false
-```
 
 OpenVidu가 정상 실행된 상태
 ```powershell
@@ -280,4 +270,12 @@ docker compose up -d
 docker compose up -d --force-recreate openvidu-nginx
 ```
 
- 
+ 테스트
+```bash
+SECRET="설정한 비밀번호"
+curl -vk -u OPENVIDUAPP:$SECRET https://localhost:4443/openvidu/api/sessions \
+  -H "Content-Type: application/json" \
+  -d '{"customSessionId":"test"}' 2>&1 | head -n 60
+```
+중간에 HTTP/1.1 200 또는 JSON 반환하면 성공
+
