@@ -24,7 +24,7 @@ docker build --no-cache -t deskit:latest
 
 **redis-stack 컨테이너에 접속**
 ```
-docker exec -it <컨테이너이름> redis-cli
+docker exec -it <컨테이너명> redis-cli
 ```
 
 
@@ -45,11 +45,14 @@ docker run -d \
 (docker desktop이면 이미지에서 컨테이너 생성 가능)
 
 
-**도커 서버 켜기/끄기**
+**컨테이너 켜기/끄기/재시작/강제 재생성**
 ```
 docker compose up -d
 docker compose down
+docker restart
+docker compose up -d --force-recreate 
 ```
+끝에 컨테이너명 입력하면 해당 컨테이너만 적용용
 
 ---
 # Redis CLI

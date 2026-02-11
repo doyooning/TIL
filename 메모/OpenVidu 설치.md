@@ -48,7 +48,7 @@ DOMAIN_OR_PUBLIC_IP=localhost
 OPENVIDU_SECRET=openvidu1123
 CERTIFICATE_TYPE=selfsigned
 HTTP_PORT=80
-HTTPS_PORT=443
+HTTPS_PORT=4443
 ```
 
 docker-compose.override.yml 설정:
@@ -151,6 +151,7 @@ services:
         image: openvidu/openvidu-proxy:2.32.1
         restart: always
         volumes:
+		    - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
             - ./certificates:/etc/letsencrypt
             - ./owncert:/owncert
             - ./custom-nginx-vhosts:/etc/nginx/vhost.d/
@@ -177,10 +178,12 @@ services:
             options:
                 max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
 ```
-요약하면 network_mode= host 지우기
+기본 설정인 network_mode= host 지우기
 
-
-
+### 설정 Tip
+각 컨테이너 전용 터미널: docker desktop에서 확인
+메인 터미널: PowerShell(관리자 말고 일반) -> WSL(Ubuntu) 터미널 열기
+각종 설정 파일 열기: MobaXTerm 텍스트 에디터에서 열기
 
 ### 문제 해결을 위한 Ubuntu 명령어
 
@@ -224,3 +227,57 @@ docker compose up -d
 docker ps --format "table {{.Names}}\t{{.Ports}}"
 ```
 
+**502 Bad Gateway 관련**
+다음과 같은 오류 로그 확인시:
+```bash
+[error] 83#83: *1 connect() failed (111: Connection refused) while connecting to upstream, client: 172.18.0.1, server: localhost, request: "GET /openvidu/api/config HTTP/1.1", upstream: "http://127.0.0.1:5443/openvidu/api/config", host: "localhost:4443"
+```
+nginx 컨테이너 기준 'localhost' = nginx 컨테이너 자신이므로
+자기 자신에서 5443 포트를 찾으면 없음(=502)
+
+때문에 openvidu-server 컨테이너에서 5443 포트를 찾게 해줘야 함
+이를 위해서는 nginx 설정 파일을 수정해야 하고
+수정 편의 + 컨테이서 재생성시 초기화 방지를 위해 호스트에 설정 파일 가져온 뒤,
+docker-compose.yml에서 해당 설정 파일을 사용하도록 설정 필요
+
+###### docker-compose.yml에 nginx conf를 볼륨으로 고정 마운트하기
+호스트에 conf 파일 하나 만들어서, 컨테이너가 매번 그걸 쓰게 하기
+
+openvidu 디렉토리에서
+```bash
+mkdir -p ./nginx/conf.d
+docker cp openvidu-nginx-1:/etc/nginx/conf.d/default.conf ./nginx/conf.d/default.conf
+```
+
+default.conf 열어서 수정
+```bash
+nano nginx/conf.d/default.conf
+```
+
+server localhost:5443 -> server openvidu-server:5443 
+```bash
+upstream openviduserver {
+    server openvidu-openvidu-server-1:5443;
+    # 또는 서비스명이 있다면 server openvidu-server:5443;
+}
+```
+컨테이너명 또는 서비스명인데 일단 컨테이너명이 확실함
+
+###### docker-compose.yml에 마운트 추가
+
+services - nginx - volumes에 추가
+```bash
+services:
+  nginx:
+    volumes:
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+```
+
+적용
+```bash
+docker compose up -d
+# 또는
+docker compose up -d --force-recreate openvidu-nginx
+```
+
+ 
