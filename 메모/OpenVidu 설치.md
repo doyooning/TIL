@@ -281,3 +281,118 @@ curl -vk -u OPENVIDUAPP:$SECRET https://localhost:4443/openvidu/api/sessions \
 ```
 중간에 HTTP/1.1 200 또는 JSON 반환하면 성공
 
+---
+# 서버에 배포
+## 1) 네트워크/NAT/방화벽 체크 (가장 중요해요)
+로컬호스트에서 성공한 건 “내 PC/서버 내부”에서는 된다는 뜻이고, **외부 사용자(다른 네트워크, 모바일 LTE, 회사망)** 에서는 TURN/방화벽 때문에 실패할 수 있어요.
+
+- **UDP 3478**(coturn) 외부에서 열려 있는지
+- 기업망/학교망처럼 UDP 막히는 환경에서 **TURN TCP(보통 443/80/3478 TCP)** 로라도 붙는지
+- 실제 도메인으로 운영하면 `DOMAIN_OR_PUBLIC_IP`, `OPENVIDU_PUBLICURL`이 외부 도메인 기준으로 맞는지
+👉 추천 테스트: 휴대폰 LTE로 접속해서 1:1, 1:3 통화 해보기
+
+## 2) 인증/보안 (OPENVIDU_SECRET 고정 + 접근제어)
+- `OPENVIDU_SECRET`은 **랜덤 생성이 아니라 고정**(환경변수/.env)으로 관리하세요.
+- OpenVidu REST API(`/openvidu/api/**`)는 **외부에 그대로 노출하면 안 좋아요.**
+    - 프론트에서 직접 REST API 호출하지 말고
+    - **백엔드가 세션/토큰을 발급**해주는 구조로 가는 게 안전해요.
+- nginx에서 `/dashboard`는 운영환경에선 IP 제한 또는 Basic Auth 거는 걸 추천해요.
+
+## 3) TLS/도메인/웹소켓 정리
+- 실제 서비스는 `localhost` 말고 도메인 + 유효한 인증서로 운영해야 브라우저 정책에서 자유로워요.
+- 프론트가 다른 도메인이라면 CORS/쿠키/WS 경로도 함께 정리해야 해요.
+- 프록시를 이미 쓰고 있으니, WebSocket/HTTP2/업그레이드 헤더 설정은 그대로 유지 점검해두면 좋아요.
+
+## 4) 리소스/성능 (KMS 서버가 병목입니다)
+OpenVidu CE에서 미디어는 **KMS(Kurento)** 가 먹어요.
+- 동시 접속 늘릴수록 **CPU, 네트워크, 디스크(녹화 시)** 가 빠르게 증가
+- 서버 스펙 대비 **동시 참가자 목표치**를 정하고 부하 테스트를 해두는 게 좋아요.
+- 최소 체크:
+    - `docker stats`로 openvidu-kms CPU/RAM 추적
+    - 실제로 4~10명 방 만들어서 5~10분 테스트
+
+## 5) 운영 관측성(로그/모니터링)
+장애 나면 “왜 안 붙는지”가 바로 보여야 해요.
+- nginx: 4xx/5xx, upstream error 로그
+- openvidu-server: session/token/REST 에러
+- coturn: TURN allocation/permission 이슈
+- kms: 미디어 파이프라인 에러
+👉 추천: 컨테이너 로그를 파일/수집기로 모으거나 최소 `docker logs` tail 기준을 정해두기
+
+## 6) 장애 대비(재시작/원복 방지)
+이번에 겪은 것처럼 “재기동하면 설정 원복”이 가장 흔한 운영 사고예요.
+- **docker-compose/.env를 소스관리(Git)** 로 고정
+- nginx conf, letsencrypt 경로 등은 **볼륨 마운트로 영속화**
+- 재기동 시나리오(서버 재부팅, 컨테이너 재시작) 한 번씩 실제로 해보기
+
+# 서버 이전시 핵심 포인트
+## 1) 아키텍처 맵핑
+- **NCP 서버(Compute)** → **EC2** (또는 ECS)
+- **NCP Object Storage** → **S3**
+- **NCP 로드밸런서/도메인/SSL** → **ALB + ACM** 또는 **Nginx + Let’s Encrypt**
+- **DB 서버** → **RDS(MySQL)** 또는 EC2 자체 운영
+- **Redis** → **ElastiCache** 또는 EC2
+- **OpenVidu(KMS/coturn/nginx 포함)** → **EC2 단독 인스턴스**(초기엔 이게 제일 쉬움)
+
+## 2) OpenVidu를 AWS에서 띄울 때 제일 중요한 것: 방화벽/포트/네트워크
+AWS 보안 그룹(Security Group)에서 최소 아래를 확실히 열어야 해요(구성/버전에 따라 조금 다름).
+- **TCP 443(또는 4443)**: 대시보드/REST/웹 접속
+- **UDP 3478**: TURN(코어)
+- **(필수 가능성 큼) UDP 미디어 포트 범위**: WebRTC RTP/RTCP (OpenVidu/Kurento가 쓰는 포트 대역)
+    - 이걸 안 열면 “대시보드 테스트는 되는데 외부/회사망에서 자주 실패”가 터져요.
+- 회사망/학교망 대응을 위해 **TURN TCP도 고려**(UDP 막히는 환경 대비)
+✅ 권장: EC2에 띄운 다음 **휴대폰 LTE/다른 집 인터넷**에서 접속 테스트까지 해야 “진짜 성공”이에요.
+
+## 3) PUBLIC URL/도메인/SSL 설정 (이전 때 502 겪었으니까 특히)
+AWS에서 운영 도메인을 쓰면:
+- `DOMAIN_OR_PUBLIC_IP` / `OPENVIDU_PUBLICURL`이 **반드시 “외부에서 접속하는 도메인” 기준**으로 맞아야 해요.
+- 포트도 `:4443` 같은 임시 포트는 운영에선 피하고, 가능하면 **443 표준**으로 정리하는 게 좋아요.
+- SSL은 2가지 선택:
+    - **ALB + ACM(추천)**: 인증서 관리가 편함
+    - **EC2 Nginx + Let’s Encrypt**: 단독 구성 간단하지만 갱신/운영 부담
+
+## 4) “썸네일 업로드가 클라우드 서버로 박혀있는 코드”를 S3로 바꿀 때
+보통 기존 코드가 이런 형태 중 하나예요:
+- 서버 로컬 경로에 저장(`/var/www/...`, `uploads/`)
+- 특정 클라우드 스토리지 엔드포인트로 업로드(NCP Object Storage 등)
+- CDN URL을 하드코딩
+AWS로 옮길 때 체크:
+- S3는 **Public 공개 업로드를 지양**하고, 보통
+    1. 백엔드가 S3에 업로드  
+        또는
+    2. **Presigned URL**로 프론트가 직접 업로드(백엔드는 서명만 발급)  
+        둘 중 하나로 가요.
+- 이미지 썸네일은 조회가 많으니
+    - S3 **객체 키 규칙(방송ID/날짜/UUID)** 통일
+    - **CloudFront** 붙일지(권장)
+    - 캐시/무효화 전략
+- 업로드 실패/재시도/파일 크기 제한(멀티파트)도 함께 정리
+
+## 5) IAM/키 관리(진짜 많이 터지는 부분)
+- EC2/ECS에서 S3 접근할 때 **Access Key를 서버에 박는 방식보다**  
+    **IAM Role(Instance Profile)** 로 권한 부여하는 게 베스트예요.
+- 권한은 최소화:
+    - 특정 버킷/특정 prefix에만 `PutObject`, `GetObject` 등
+
+## 6) 배포 파이프라인 / 환경변수 교체
+NCP에서 사용하던 것들이 AWS로 바뀌면 환경변수도 같이 바뀌어요.
+- `S3_BUCKET`, `S3_REGION`, `S3_BASE_URL`(또는 CloudFront URL)
+- OpenVidu 도메인/포트
+- CORS 허용 도메인(프론트 도메인 변경)
+- OAuth redirect URI(도메인이 바뀌면 다시 등록 필요)
+
+## 7) 인증/토큰 얘기(지금 설계 방향 좋아요)
+말씀하신 것처럼 **access/refresh 토큰은 백엔드 인증용으로 유지**하고,  
+OpenVidu는 별도로 **세션/토큰(OpenVidu Token)** 이 필요해요.
+
+권장 플로우:
+1. 프론트가 access token으로 백엔드 호출
+2. 백엔드가 사용자 권한 확인 후 OpenVidu 세션 생성/조회
+3. 백엔드가 OpenVidu token 발급해서 프론트에 내려줌
+4. 프론트는 그 OpenVidu token으로 join
+
+즉, “우리 JWT(access/refresh)”는 **권한 확인**, “OpenVidu token”은 **미디어 세션 입장권**이에요.
+
+# 인증서 발급
+HTTPS 연결을 위해 필요
+Let's encrypt 방식 + Certbot
