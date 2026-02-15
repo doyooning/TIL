@@ -283,6 +283,74 @@ curl -vk -u OPENVIDUAPP:$SECRET https://localhost:4443/openvidu/api/sessions \
 
 ---
 # 서버에 배포
+OpenVidu 미디어 서버 전용 EC2 인스턴스 만들어주기
+
+도메인 하나 장만하기
+https://xn--220b31d95hq8o.xn--3e0b707e/
+
+EC2에 Docker, Docker Compose 설치
+```bash
+sudo apt update -y
+sudo apt install -y ca-certificates curl gnupg lsb-release
+
+# Docker 설치 (공식 방식)
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt update -y
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+sudo systemctl enable --now docker
+docker --version
+docker compose version
+
+```
+
+OpenVidu 설치 스크립트 실행 (공식 방식)
+```bash
+sudo su
+cd /opt
+curl https://s3-eu-west-1.amazonaws.com/aws.openvidu.io/install_openvidu_latest.sh | bash
+```
+
+`/opt/openvidu/.env` 핵심 설정
+```bash
+cd /opt/openvidu
+nano .env
+```
+
+필수 예시
+```bash
+DOMAIN_OR_PUBLIC_IP=openvidu.yourdomain.com
+OPENVIDU_SECRET=아주강력한비밀번호
+
+# HTTPS (권장: letsencrypt)
+CERTIFICATE_TYPE=letsencrypt
+LETSENCRYPT_EMAIL=you@example.com
+```
+
+OpenVidu 실행
+```bash
+cd /opt/openvidu
+./openvidu start
+```
+
+정상 기동되면 보통 아래로 접속
+- OpenVidu Server: `https://DOMAIN_OR_PUBLIC_IP/`
+- Dashboard: `https://DOMAIN_OR_PUBLIC_IP/dashboard/`
+
+OpenVidu Call(기본 데모 앱)
+```
+ID : admin
+PW : OPENVIDU_SECRET과 동일
+```
+
+세션 생성 및 중단 가능
+
+---
 ## 1) 네트워크/NAT/방화벽 체크 (가장 중요해요)
 로컬호스트에서 성공한 건 “내 PC/서버 내부”에서는 된다는 뜻이고, **외부 사용자(다른 네트워크, 모바일 LTE, 회사망)** 에서는 TURN/방화벽 때문에 실패할 수 있어요.
 
