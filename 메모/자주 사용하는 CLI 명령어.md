@@ -83,6 +83,16 @@ nginx -s reload
 /etc/nginx/sites-enabled/
  -> nginx 폴더 경로
 
+활성화된 설정 확인
+```bash
+ubuntu@ip-172-31-40-198:~$ ls -al /etc/nginx/sites-enabled
+total 8
+drwxr-xr-x 2 root root 4096 Feb 13 13:30 .
+drwxr-xr-x 8 root root 4096 Feb 13 14:00 ..
+lrwxrwxrwx 1 root root   34 Feb 13 13:20 default -> /etc/nginx/sites-available/default
+```
+해당 위치의 default는 sites-available/default를 가리키고 있음(심볼릭 링크)
+그래서 가리키는 파일을 수정해야 적용됨
 
 ---
 # WSL
