@@ -38,9 +38,9 @@ docker stop <컨테이너 이름>
 **컨테이너 삭제/생성**
 ```
 docker rm <컨테이너이름>
-docker run -d \
-  --name redis-stack \
+docker run -d --name redis-stack \
   -p 6379:6379 \
+  redis/redis-stack-server:latest
 ```
 (docker desktop이면 이미지에서 컨테이너 생성 가능)
 
@@ -77,8 +77,8 @@ nginx -s reload
 /var/www/deskit/
 -> 프론트 파일 배포 경로
 
-/etc/nginx/sites-enabled/
- -> nginx 폴더 경로
+/etc/nginx/sites-available/default
+ -> nginx 설정 파일
 
 활성화된 설정 확인
 ```bash
@@ -90,6 +90,12 @@ lrwxrwxrwx 1 root root   34 Feb 13 13:20 default -> /etc/nginx/sites-available/d
 ```
 해당 위치의 default는 sites-available/default를 가리키고 있음(심볼릭 링크)
 그래서 가리키는 파일을 수정해야 적용됨
+
+**nginx 로그 확인**
+```bash
+sudo tail -n 50 /var/log/nginx/access.log
+sudo tail -n 50 /var/log/nginx/error.log
+```
 
 ---
 # WSL
