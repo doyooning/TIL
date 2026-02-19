@@ -30,8 +30,8 @@ docker exec -it <컨테이너명> redis-cli
 
 **컨테이너 시작/중지**
 ```
-docker start
-docker stop
+docker start <컨테이너 이름>
+docker stop <컨테이너 이름>
 ```
 
 
@@ -60,9 +60,6 @@ docker compose up -d --force-recreate
 ```
 redis-cli --scan --pattern "eval-doc:*" | xargs redis-cli del
 ```
-
-
-
 ---
 # Nginx
 **nginx 테스트**
