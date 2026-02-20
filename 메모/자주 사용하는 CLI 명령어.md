@@ -52,7 +52,31 @@ docker compose down
 docker restart
 docker compose up -d --force-recreate 
 ```
-끝에 컨테이너명 입력하면 해당 컨테이너만 적용용
+끝에 컨테이너명 입력하면 해당 컨테이너만 적용
+
+
+**미사용 이미지/컨테이너/네트워크/캐시 정리**
+```bash
+docker system prune -af
+```
+
+**미사용 볼륨 정리**
+```bash
+docker volume prune -f
+```
+
+결과 확인
+```bash
+docker system df
+df -h 
+```
+
+재시작
+```bash
+docker pull openvidu/openvidu-recording:2.32.1
+cd /opt/openvidu
+./openvidu restart
+```
 
 ---
 # Redis CLI
