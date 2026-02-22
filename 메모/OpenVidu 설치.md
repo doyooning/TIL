@@ -350,10 +350,17 @@ PW : OPENVIDU_SECRET과 동일
 
 세션 생성 및 중단 가능
 
+### 녹화 기능 사용시 openvidu-recording
+
 녹화 기능 컨테이너 추가 설치
 ```bash
 docker pull openvidu/openvidu-recording:2.32.1
 ```
+
+openvidu-recording은 docker에 설치는 되어 있으나, 직접 실행은 하지 않음
+녹화 기능이 필요할 때만 OpenVidu에서 호출해서 사용함
+
+
 
 ---
 ## 1) 네트워크/NAT/방화벽 체크 (가장 중요해요)
