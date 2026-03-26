@@ -56,3 +56,65 @@ Docker : 컨테이너
 쿠버네티스도 도커처럼 이미지를 기반으로 파드를 띄워 실행함
 ![[Pasted image 20260318231322.png]]
 
+# 웹 서버(Nginx)를 파드(Pod)로 띄우기
+yaml 파일로 많이 생성함
+
+yaml 파일 생성: nginx-pod.yaml
+```yaml
+apiVersion: v1 # Pod를 생성할 때는 v1이라고 기재한다. (공식 문서)
+kind: Pod # Pod를 생성한다고 명시
+metadata:
+ name: nginx-pod # Pod에 이름 붙이는 기능
+spec:
+ containers:
+ - name: nginx-container # 생성할 컨테이너의 이름
+ image: nginx # 컨테이너를 생성할 때 사용할 Docker 이미지
+ ports:
+ - containerPort: 80 # 해당 컨테이너가 어떤 포트를 사용하는 지 명시적으로 표현
+```
+yaml 문법은 들여쓰기 할 때 tab 말고 띄어쓰기로
+`spec.containers.ports.containerPort` : 실제 작동에는 영향을 미치지 않음
+단순히 컨테이너가 어떤 포트를 사용하는 지 명시적으로 나타내 기 위한 문서화용 (Dockerfile의 EXPOSE 와 비슷한 역할)
+
+yaml 파일 기반 파드 생성
+```shell
+ kubectl apply -f nginx-pod.yaml # yaml 파일에 적혀져있는 리소스(파드)를 생성
+```
+
+파드 잘 생성되었는지 확인
+```shell
+kubectl get pods # 파드(Pod) 조회
+```
+
+Nginx 접속 확인
+-> 접속 안 됨
+
+쿠버네티스에서는 위에서 작성한 yaml 파일을 보고 **매니페스트 파일(Manifest File)** 이라고 부름
+이 매니페스트 파일은 쿠버네티스에서 다양한 리소스(파드, 서비스, 볼륨 등)를 생성하고 관리하기 위해 사용하는 파일이라고 기억하면 좋음
+
+# 왜 접속 안됨?
+Docker - 컨테이너 내부와 컨테이너 외부의 네트워크가 서로 독립적으로 분리
+쿠버네티스 - 파드(Pod) 내부의 네트워크를 컨테이너가 공유해서 같이 사용
+
+**파드(Pod)의 네트워크**는 로컬 컴퓨터의 네트워크와는 **독립적으로 분리**됨
+이 때문에 파드(Pod)로 띄운 Nginx에 아무리 요청을 보내도 응답이 없던 것 !
+
+Nginx가 띄우는 웹 페이지에 접근하기(2가지 방법) 
+1. 파드(Pod) 내부로 들어가서 접근하기 
+2. 파드(Pod)의 내부 네트워크를 외부에서도 접속할 수 있도록 포트 포워딩(= 포트 연결시키기) 활용하기
+
+
+# 파드 내부로 들어가서 Nginx 요청 보내기
+```shell
+# kubectl exec -it [파드명] -- bash
+# 도커에서 컨테이너로 접속하는 명령어(docker exec -it [컨테이너 ID] bash)와 비슷하다.
+$ kubectl exec -it nginx-pod -- bash # nginx-pod 내부 환경으로 접속
+# ---Pod 내부---
+$ curl localhost:80 # Nginx로 요청보내기
+```
+
+쿠버네티스에서는 **파드(Pod) 내부의 네트워크를 컨테이너가 공유**해서 같이 사용
+때문에 파드로 접속해서 Nginx로 요청을 보냈을 때 정상적으로 응답이 날라온 것이다.
+
+포트포워딩 활용하여 Nginx로 요청 전송
+
