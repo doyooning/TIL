@@ -78,7 +78,7 @@ yaml 문법은 들여쓰기 할 때 tab 말고 띄어쓰기로
 
 yaml 파일 기반 파드 생성
 ```shell
- kubectl apply -f nginx-pod.yaml # yaml 파일에 적혀져있는 리소스(파드)를 생성
+kubectl apply -f nginx-pod.yaml # yaml 파일에 적혀져있는 리소스(파드)를 생성
 ```
 
 파드 잘 생성되었는지 확인
@@ -108,13 +108,25 @@ Nginx가 띄우는 웹 페이지에 접근하기(2가지 방법)
 ```shell
 # kubectl exec -it [파드명] -- bash
 # 도커에서 컨테이너로 접속하는 명령어(docker exec -it [컨테이너 ID] bash)와 비슷하다.
-$ kubectl exec -it nginx-pod -- bash # nginx-pod 내부 환경으로 접속
+kubectl exec -it nginx-pod -- bash # nginx-pod 내부 환경으로 접속
 # ---Pod 내부---
-$ curl localhost:80 # Nginx로 요청보내기
+curl localhost:80 # Nginx로 요청보내기
 ```
 
 쿠버네티스에서는 **파드(Pod) 내부의 네트워크를 컨테이너가 공유**해서 같이 사용
-때문에 파드로 접속해서 Nginx로 요청을 보냈을 때 정상적으로 응답이 날라온 것이다.
+때문에 파드로 접속해서 Nginx로 요청을 보냈을 때 정상적으로 응답이 날라옴
 
 포트포워딩 활용하여 Nginx로 요청 전송
+```shell
+# kubectl port-forward pod/[파드명] [로컬에서의 포트]/[파드에서의 포트]
+sudo kubectl port-forward pod/nginx-pod 80:80
+```
+
+파드 삭제
+```shell
+# kubectl delete pod [파드명] 
+kubectl delete pod nginx-pod # nginx-pod라는 파드 삭제 
+kubectl get pods # 파드가 잘 삭제됐는 지 확인
+```
+
 
