@@ -20,6 +20,7 @@ Docker Compose와 비슷한 느낌
 https://hong-yp-ml-records.tistory.com/127
 
 Docker Desktop에서 제공하는 MiniKube 사용
+Enable Kubernetes 하면 Kubernetes를 설치해줌
 
 Windows Powershell에서
 ```shell
@@ -93,8 +94,11 @@ Nginx 접속 확인
 이 매니페스트 파일은 쿠버네티스에서 다양한 리소스(파드, 서비스, 볼륨 등)를 생성하고 관리하기 위해 사용하는 파일이라고 기억하면 좋음
 
 # 왜 접속 안됨?
+![[Pasted image 20260328200240.png]]
 Docker - 컨테이너 내부와 컨테이너 외부의 네트워크가 서로 독립적으로 분리
+	컨테이너 내부 vs 컨테이너 외부
 쿠버네티스 - 파드(Pod) 내부의 네트워크를 컨테이너가 공유해서 같이 사용
+	파드 내부 vs 파드 외부
 
 **파드(Pod)의 네트워크**는 로컬 컴퓨터의 네트워크와는 **독립적으로 분리**됨
 이 때문에 파드(Pod)로 띄운 Nginx에 아무리 요청을 보내도 응답이 없던 것 !
@@ -111,6 +115,7 @@ Nginx가 띄우는 웹 페이지에 접근하기(2가지 방법)
 kubectl exec -it nginx-pod -- bash # nginx-pod 내부 환경으로 접속
 # ---Pod 내부---
 curl localhost:80 # Nginx로 요청보내기
+exit # 나가기
 ```
 
 쿠버네티스에서는 **파드(Pod) 내부의 네트워크를 컨테이너가 공유**해서 같이 사용
@@ -118,15 +123,139 @@ curl localhost:80 # Nginx로 요청보내기
 
 포트포워딩 활용하여 Nginx로 요청 전송
 ```shell
+# Mac
 # kubectl port-forward pod/[파드명] [로컬에서의 포트]/[파드에서의 포트]
 sudo kubectl port-forward pod/nginx-pod 80:80
+
+# Windows
+kubectl port-forward pod/nginx-pod 80:80
+# Sudo 사용이 제한됨
 ```
+
+![[Pasted image 20260328200728.png]]
+로컬에서의 포트 = 80, 파드에서의 포트 = 80
+
+80 포트 접속 확인 
+```shell 
+curl localhost:80
+```
+Nginx 창 뜨면 성공
 
 파드 삭제
 ```shell
 # kubectl delete pod [파드명] 
-kubectl delete pod nginx-pod # nginx-pod라는 파드 삭제 
+kubectl delete pod nginx-pod # nginx-pod라는 파드 삭제
+# 성공시 : pod "nginx-pod" deleted from default namespace 
 kubectl get pods # 파드가 잘 삭제됐는 지 확인
+# 문제 발생 : No resources found in default namespace.
 ```
 
+
+# 백엔드(Spring Boot) 서버를 파드(Pod)로 띄워보기
+기본적인 스프링부트 환경 세팅
+localhost:8080에서 실행
+
+Dockerfile 생성
+: 스프링부트 프로젝트를 image로 만들기 위함
+빌드한 파일(jar)을 묶어서 이미지로 만들 것임
+
+```dockerfile
+FROM eclipse-temurin:17-jdk
+
+COPY build/libs/*SNAPSHOT.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+```
+
+스프링부트 프로젝트 빌드
+```bash
+./gradlew clean build
+```
+
+Dockerfile을 바탕으로 이미지 빌드
+```shell
+docker build -t spring-server .
+```
+끝에 .(마침표) 필수
+
+이미지 생성 확인
+```shell
+docker image ls
+```
+
+manifest 파일 작성
+spring-pod.yaml
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: spring-pod
+spec:
+  containers:
+    - name: spring-container
+      image: spring-server
+      ports:
+        - containerPort: 8080
+```
+
+해당 파일 기반으로 파드 생성
+```shell
+kubectl apply -f spring-pod.yaml
+```
+
+결과 확인
+```shell
+kubectl get pods
+```
+
+이 때 status를 보면 ImagePullBackOff라고 떠있음
+이미지 Pull 과정에서 문제가 생김 - 왜?
+=> **이미지 풀 정책**
+
+# Image Pull Policy
+쿠버네티스가 yaml 파일을 읽어들여 파드 생성시, 이미지를 어떻게 받아올 것인지에 대한 정책
+
+1. **`Always`**
+    
+    로컬에서 이미지를 가져오지 않고, 무조건 **레지스트리(= Dockerhub, ECR과 같은 원격 이미지 저장소)에서 가져온다.**
+    
+2. **`IfNotPresent`**
+    
+    로컬에서 이미지를 먼저 가져온다. 만약 로컬에 이미지가 없는 경우에만 레지스트리에서 가져온다.
+    
+3. **`Never`**
+    
+    로컬에서만 이미지를 가져온다.
+
+manifest 파일에 이미지 풀 정책 추가
+```yaml
+imagePullPolicy: IfNotPresent # spring-server는 로컬에만 있음
+```
+
+이미지 풀 정책 기본값
+- 이미지의 태그가 `latest`이거나 명시되지 않은 경우 : `imagePullPolicy`는 `Always`로 설정됨
+- 이미지의 태그가 `latest`가 아닌 경우 : `imagePullPolicy`는 `IfNotPresent`로 설정됨
+
+이미지 풀 정책을 수정하고 다시 파드 생성
+```shell
+kubectl delete pod spring-pod
+kubectl apply -f spring-pod.yaml
+kubectl get pods
+```
+
+상태가 Running
+
+1. 파드 내부 접속 후 요청 보내기
+```shell
+kubectl exec -it spring-pod -- bash
+curl localhost:8080
+```
+
+2. 포트포워딩
+```shell
+# 포트
+kubectl port-forward pod/spring-pod 12345:8080 
+```
+로컬 12345 -> 파드 8080
+localhost:12345로 접속해야 들어가짐
 
