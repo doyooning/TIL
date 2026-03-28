@@ -259,3 +259,34 @@ kubectl port-forward pod/spring-pod 12345:8080
 로컬 12345 -> 파드 8080
 localhost:12345로 접속해야 들어가짐
 
+
+# 파드 디버깅
+에러 메시지 확인
+```shell
+# kubectl describe pods [파드명]
+kubectl describe pods nginx-pod # nginx-pod 파드의 세부 정보 조회
+```
+
+변경사항 적용
+```shell
+kubectl apply -f nginx-pod.yaml
+```
+
+파드 로그 확인
+```shell
+# kubectl logs [파드명]
+kubectl logs nginx-pod # 파드 로그 확인하기
+```
+
+파드에 접속하고 싶을 때
+```shell
+# kubectl exec -it [파드명] -- bash
+kubectl exec -it nginx-pod -- bash
+
+# kubectl exec -it [파드명] -- sh
+kubectl exec -it nginx-pod -- sh
+```
+
+`docker exec -it [컨테이너 ID] bash` 와 유사
+bash가 안되면 sh로 접속
+
