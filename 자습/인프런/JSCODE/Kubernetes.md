@@ -499,6 +499,101 @@ kubectl exec -it [파드명] -- bash # 파드 내부로 접속하기
 env # 환경변수 조회
 ```
 
+# 컨피그맵(ConfigMap) 설정
+근데 위 방법처럼 env를 내장시키는 방법은 좋지 않음(변경할 때 불편)
+따라서 컨피그맵이라는 별도의 파일로 따로 관리함
+
+1. ConfigMap 매니페스트 파일 생성
+	spring-config.yaml
+```yaml
+apiVersion: v1
+kind: ConfigMap
+
+# ConfigMap 기본 정보
+metadata:
+  name: spring-config # ConfigMap 이름
+
+# Key, Value 형식으로 설정값 저장
+data:
+  my-account: jscode
+  my-password: password123
+```
+
+2. Deployment 매니페스트 파일 수정(env 부분)
+	spring-deployment.yaml
+```yaml
+...
+          env:
+            - name: MY_ACCOUNT
+              valueFrom:
+                configMapKeyRef:
+                  name: spring-config # ConfigMap의 이름
+                  key: my-account # ConfigMap에 설정되어 있는 Key값
+            - name: MY_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: spring-config
+                  key: my-password
+```
+
+3. 매니페스트 파일 반영
+```shell
+kubectl apply -f spring-config.yaml
+kubectl apply -f spring-deployment.yaml
+
+# kubectl rollout restart deployment [디플로이먼트명]
+kubectl rollout restart deployment spring-deployment # Deployment 재시작
+```
+
+# 시크릿(Secret)으로 민감정보 분리
+위 방식대로 하면 비밀번호와 같은 보안상 중요한 정보들이 노출될 가능성이 있음
+따라서 컨피그맵과 별도로 시크릿으로 관리해야 함
+
+1. 컨피그맵 수정
+	spring-config.yaml
+```yaml
+...
+data:
+  my-account: jscode
+  ~~my-password: password123~~ # 삭제
+```
+
+2. 시크릿 생성
+	spring-secret.yaml
+```yaml
+apiVersion: v1
+kind: Secret
+
+# Secret 기본 정보
+metadata:
+  name: spring-secret # Secret 이름
+
+# Key, Value 형식으로 값 저장
+stringData:
+  my-password: my-secret-password
+```
+
+3. Deployment 수정
+	spring-deployment.yaml
+```yaml
+          env:
+            - name: MY_ACCOUNT
+              valueFrom:
+                configMapKeyRef:
+                  name: spring-config # ConfigMap의 이름
+                  key: my-account # ConfigMap에 설정되어 있는 Key값
+            - name: MY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: spring-secret
+                  key: my-password
+```
+컨피그맵에 있는 Key값을 참조: `configMapKeyRef`
+시크릿에 있는 Key값을 참조: `secretKeyRef`
+env의 name은 Spring에서 사용한 변수명
+각 Ref의 name은 해당 매니페스트 파일의 이름
+
+
 
 
 
