@@ -381,3 +381,125 @@ Service 종류
 1. NodePort: 쿠버네티스 내부에서 해당 서비스에 접속하기 위한 포트를 열고 외부에서 접속 가능하도록
 2. ClusterIP: 쿠버네티스 내부에서만 통신할 수 있는 IP 주소를 부여, 외부에서는 요청할 수 없음
 3. LoadBalancer: 외부의 로드밸런서(AWS 등)를 활용해 외부에서 접속 가능하도록 연결
+
+![[Pasted image 20260330143937.png]]
+서비스도 하나의 독립적인 네트워크 환경
+nodePort:30000(외부에서 접근할 포트) -> port:8080(서비스 포트) -> targetPort:8080(백엔드 파드 포트)
+
+# 서버 개수 조정
+트래픽이 늘어나서 서버를 늘려야 할 때
+
+spring-deployment.yaml 수정
+```yaml
+spec:
+  replicas: 5 # 3개 -> 5개로 늘림
+```
+
+변경 사항 적용
+```shell
+kubectl apply -f spring-deployment.yaml
+```
+
+apply -f 명령어는 새롭게 파일 생성할 때도 사용하고, 변경 사항을 적용할 때도 사용됨
+
+# Self-Healing
+컨테이너 종료하기
+```
+docker kill [컨테이너 ID(일부: 4개만)]
+```
+
+파드 조회하면 방금 종료한 파드가 `Restarts: 1` 로 기록됨
+파드 내 컨테이너 가 작동하지 않음을 인식하고 컨테리너를 새로 만들어 서버 재시작
+= Self-Healing(자가 복구)
+
+# 새로운 버전의 서버로 업데이트
+1. 코드 수정
+2. 스프링부트 프로젝트 다시 빌드
+```shell
+./gradlew clean build
+```
+3. 빌드된 jar를 다시 이미지로 빌드
+```shell
+docker build -t spring-server:1.0 . # 새 버전(1.0) 이미지
+```
+기존 메니페스트  파일에서 해당 이미지명 수정
+
+4. 이미지가 잘 생성되었는지 확인
+```shell
+docker image ls
+```
+
+5. 업데이트 내용 확인
+	localhost:30000 접속(nodePort로 설정한 포트)
+
+# 환경 변수 등록
+1. 백엔드 코드 작성
+```java
+@RestController
+public class AppController {
+  @Value("${MY_ACCOUNT:default}")
+  private String myAccount;
+  
+  @Value("${MY_PASSWORD:default}")
+  private String myPassword;
+
+  @GetMapping("/")
+  public String home() {
+    return "myAccount: " + myAccount + ", myPassword: " + myPassword;
+  }
+}
+```
+myAccount는 MY_ACCOUNT의 값을 사용하거나 없으면 default로 사용함
+
+2. 실행 확인, Dockerfile 작성
+3.  스프링부터 프로젝트 빌드 (`./gradlew clean build`)
+4. Dockerfile 바탕으로 이미지 빌드 (`docker build -t spring-server .`)
+5. 매니페스트 파일 작성
+	spring-deployment.yaml
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+
+# Deployment 기본 정보
+metadata:
+  name: spring-deployment # Deployment 이름
+
+# Deployment 세부 정보
+spec:
+  replicas: 3 # 생성할 파드의 복제본 개수
+  selector:
+    matchLabels:
+      app: backend-app # 아래에서 정의한 Pod 중 'app: backend-app'이라는 값을 가진 파드를 선택
+
+  # 배포할 Pod 정의
+  template:
+    metadata:
+      labels: # 레이블 (= 카테고리)
+        app: backend-app
+    spec:
+      containers:
+        - name: spring-container # 컨테이너 이름
+          image: spring-server # 컨테이너를 생성할 때 사용할 이미지
+          imagePullPolicy: IfNotPresent # 로컬에서 이미지를 먼저 가져온다. 없으면 레지스트리에서 가져온다.
+          ports:
+            - containerPort: 8080  # 컨테이너에서 사용하는 포트를 명시적으로 표현
+          env: # 환경변수 등록
+            - name: MY_ACCOUNT
+              value: jaeseong
+            - name: MY_PASSWORD
+              value: pwd1234
+```
+
+6. 서비스 파일 작성, 매니페스트 기반으로 실행
+7. 적용 결과 확인(파드 내부 접속)
+```shell
+kubectl get pods # 파드명 확인하기
+kubectl exec -it [파드명] -- bash # 파드 내부로 접속하기
+
+env # 환경변수 조회
+```
+
+
+
+
+
