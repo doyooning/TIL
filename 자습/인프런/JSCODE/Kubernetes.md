@@ -593,8 +593,48 @@ stringData:
 env의 name은 Spring에서 사용한 변수명
 각 Ref의 name은 해당 매니페스트 파일의 이름
 
+4. 매니페스트 파일 반영
+```shell
+kubectl apply -f spring-secret.yaml
+kubectl apply -f spring-config.yaml
+kubectl apply -f spring-deployment.yaml
+kubectl rollout restart deployment spring-deployment
+```
+
+# 볼륨(Volume)
+**파드의 문제점**
+파드를 수정할 때 기존 파드를 수정하는 것이 아니라 새로운 파드를 만들어서 갈아끼우는 방식으로 처리
+이렇게 하면 기존 파드 안에 있던 데이터가 날아감
+DB를 파드로 띄우면 DB가 날아감.. 따라서 삭제되면 안되는 데이터가 있는 경우 볼륨을 활용
+(Docker의 볼륨과 유사 개념)
+
+**볼륨(Volume)**
+데이터를 영속적으로 저장하기 위한 방법
+
+1. 로컬 볼륨
+	파드 내부의 공간 일부를 볼륨으로 활용
+	근데 파드가 삭제되면 데이터도 삭제되므로 실제로는 잘 사용 안함
+		![[Pasted image 20260330161921.png]]
+2. 퍼시스턴트 볼륨(Persistent Volume, PV)
+	파드 외부의 공간 일부를 볼륨으로 활용
+	파드가 삭제되어도 데이터를 영구적으로 사용 가능(현업 채택)
+	![[Pasted image 20260330162043.png]]
+	쿠버네티스 공간의 일부를 사용하거나
+	![[Pasted image 20260330162103.png]]
+	외부 저장소(AWS EBS 등)를 사용함
+
+**퍼시스턴트 볼륨 클레임(Persistent Volume Claim, PVC)**
+실제로는 파드가 PV에 직접 연결 불가(그렇게 설계해놨다)
+둘을 연결해주는 PVC라는 중개자가 있어야 함
+![[Pasted image 20260330162324.png]]
+
+# 디플로이먼트로 MySQL 실행
+생성한 데이터베이스가 날아감
 
 
 
+
+
+# 볼륨으로 MySQL 실행
 
 
