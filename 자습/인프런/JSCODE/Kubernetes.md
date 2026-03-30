@@ -303,6 +303,48 @@ bash가 안되면 sh로 접속
 디플로이먼트가 레플리카 셋을 관리, 레플리카 셋이 여러 파드를 관리
 레플리카: 복제본, 레플리카 셋: 복제본들의 묶음
 
+spring-deployment.yaml
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+
+# Deployment 기본 정보
+metadata:
+  name: spring-deployment # Deployment 이름
+
+# Deployment 세부 정보
+spec:
+  replicas: 3 # 생성할 파드의 복제본 개수
+  selector:
+    matchLabels:
+      app: backend-app # 아래에서 정의한 Pod 중 'app: backend-app'이라는 값을 가진 파드를 선택
+
+  # 배포할 Pod 정의
+  template:
+    metadata:
+      labels: # 레이블 (= 카테고리)
+        app: backend-app
+    spec:
+      containers:
+        - name: spring-container # 컨테이너 이름
+          image: spring-server # 컨테이너를 생성할 때 사용할 이미지
+          imagePullPolicy: IfNotPresent # 로컬에서 이미지를 먼저 가져온다. 없으면 레지스트리에서 가져온다.
+          ports:
+            - containerPort: 8080  # 컨테이너에서 사용하는 포트를 명시적으로 표현
+```
+
+디플로이먼트 생성
+```shell
+kubectl apply -f spring-deployment.yaml 
+```
+
+디플로이먼트, 레플리카셋, 파드 생성 확인
+```shell
+kubectl get deployment
+kubectl get replicaset
+kubectl get pods
+```
+
 # Service
 외부로부터 들어오는 트래픽을 받아, 파드에 균등하게 분배해주는 **로드밸런서 역할** 기능
 
@@ -314,3 +356,28 @@ bash가 안되면 sh로 접속
 서비스는 트래픽 받아서 파드에 분배하는 로드밸런싱 + 사용자 요청 받는 기능
 컨테이너 내부에 있는 서버에 접근하려면 서비스를 생성해야 함
 
+spring-service.yaml
+```shell
+apiVersion: v1
+kind: Service
+
+# Service 기본 정보
+metadata:
+  name: spring-service # Service 이름
+  
+# Service 세부 정보
+spec:
+  type: NodePort # Service의 종류
+  selector:
+    app: backend-app # 실행되고 있는 파드 중 'app: backend-app'이라는 값을 가진 파드와 서비스를 연결
+  ports:
+    - protocol: TCP # 서비스에 접속하기 위한 프로토콜
+      port: 8080 # 쿠버네티스 내부에서 Service에 접속하기 위한 포트 번호
+      targetPort: 8080 # 매핑하기 위한 파드의 포트 번호
+      nodePort: 30000 # 외부에서 사용자들이 접근하게 될 포트 번호
+```
+
+Service 종류
+1. NodePort: 쿠버네티스 내부에서 해당 서비스에 접속하기 위한 포트를 열고 외부에서 접속 가능하도록
+2. ClusterIP: 쿠버네티스 내부에서만 통신할 수 있는 IP 주소를 부여, 외부에서는 요청할 수 없음
+3. LoadBalancer: 외부의 로드밸런서(AWS 등)를 활용해 외부에서 접속 가능하도록 연결
