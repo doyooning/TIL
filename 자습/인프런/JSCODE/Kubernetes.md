@@ -636,5 +636,74 @@ DB를 파드로 띄우면 DB가 날아감.. 따라서 삭제되면 안되는 데
 
 
 # 볼륨으로 MySQL 실행
+데이터베이스가 안날라가고 유지됨
 
 
+# 스프링부트 + DB(MySQL) 연동
+1. 스프링부트 프로젝트 빌드
+2. 간단한 코드 작성(AppController)
+3. DB연결을 위한 정보를 yml에 작성
+	application.yml
+```yml
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+```
+
+4. 불필요한 테스트 코드 삭제(빌드 오류남), Dockerfile 작성
+5. 스프링부트 프로젝트 빌드, 이미지 빌드
+```bash
+./gradlew clean build
+docker build -t spring-server .
+```
+
+6. Deployment 매니페스트 파일 작성
+	spring-deployment.yaml
+```yaml
+...
+# Deployment 정보 기존 동일
+...
+	  env:
+		- name: DB_HOST
+		  value: mysql-service # Service의 name만 입력하면 다른 서비스와 통신할 수 있다. 
+		- name: DB_PORT
+		  value: "3306" # 숫자값을 문자로 인식하게 만들기 위해 쌍따옴표 붙여야 한다.
+		- name: DB_NAME
+		  value: kub-practice
+		- name: DB_USERNAME
+		  value: root
+		- name: DB_PASSWORD
+		  value: password123
+```
+
+7. Service 매니페스트 파일 작성
+	spring-service.yaml
+```yaml
+...
+# Service 정보 기존 동일
+...
+# Service 세부 정보
+spec:
+  type: NodePort # Service의 종류
+  selector:
+    app: backend-app # 실행되고 있는 파드 중 'app: backend-app'이라는 값을 가진 파드와 서비스를 연결
+  ports:
+    - protocol: TCP # 서비스에 접속하기 위한 프로토콜
+      port: 8080 # 쿠버네티스 내부에서 Service에 접속하기 위한 포트 번호 (Service
+      targetPort: 8080 # 매핑하기 위한 파드의 포트 번호
+      nodePort: 30000 # 외부에서 사용자들이 접근하게 될 포트 번호
+```
+
+8. 매니페스트 파일 실행
+```shell
+kubectl apply -f spring-deployment.yaml
+kubectl apply -f spring-service.yaml
+```
+
+9. 동작 확인 - localhost:30000 접속
+
+전체 모식도
+![[Pasted image 20260331224642.png]]
