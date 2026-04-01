@@ -707,3 +707,38 @@ kubectl apply -f spring-service.yaml
 
 전체 모식도
 ![[Pasted image 20260331224642.png]]
+
+# 보안을 위해 MySQL 외부 접근 차단
+보안 문제 해결을 위해 Service 중 NodePort를 사용하지 않고, ClusterIP를 사용
+(아무나 외부에서 접근하지 못하도록)
+
+1. Service 매니페스트 파일에서 타입을 ClusterIP, nodePort 삭제 후 동작 확인
+```shell
+kubectl delete service mysql-service
+kubectl rollout restart deployment spring-deployment
+```
+
+localhost:30000 작동 안함
+
+2. 수정한 Service 다시 작동 후 동작 확인
+```shell
+kubectl apply -f mysql-service.yaml
+kubectl rollout restart deployment spring-deployment
+```
+
+localhost:30000 작동, DB는 연결 안 됨
+
+![[Pasted image 20260401201434.png]]
+
+DB 관리를 위해 접속해야 할 때?
+= 포트포워딩으로 접속
+```shell
+# 파드명: get pods로 검색한 내용
+# 포트는 앞이 MySQL 포트, 뒤가 서비스 포트
+kubectl port-forward [MySQL 파드명] 3306:3306
+# 만약 3306 포트를 이미 다른 곳에서 사용중일 경우 3307 등 다른 포트로 포워딩
+kubectl port-forward mysql-deployment-c4fb8859b-z8k5p 3307:3306
+```
+
+DataGrip에서도 기존 30002 대신 3306(또는 설정한 다른 포트) 기입
+
