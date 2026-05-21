@@ -46,3 +46,18 @@ https://github.com/anuraghazra/github-readme-stats/blob/master/themes/README.md
     </div>
     
 ```
+
+# 기술 스택 배지
+- **[Shields.io](https://shields.io/)**: 다양한 종류의 정적 배지를 생성해 주는 서비스입니다.
+- **[Simple Icons](https://simpleicons.org/)**: 기술 스택, 서비스 등의 로고와 공식 색상 코드를 찾아볼 수 있습니다.
+
+`Shields.io`를 통해 배지 스타일을 만들고, `Simple Icons`에서 찾은 로고 이름과 색상 코드를 조합하여 아래와 같이 나만의 기술 배지를 만들 수 있습니다.
+
+예시
+```html
+<img src="https://img.shields.io/badge/{뱃지에 표시할 텍스트}-{배경 색상}?style={스타일}&logo={로고 이름}&logoColor={로고 색상}">
+
+<!-- 예: PHP 배지 -->
+<img src="https://img.shields.io/badge/php-777BB4?style=for-the-badge&logo=php&logoColor=white">
+```
+
