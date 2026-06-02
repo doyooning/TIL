@@ -31,5 +31,5 @@ docker run -d --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8n
 로그인창 로그인
 API Key 발급
 
-# n8n MCP 서버 연결
+# n8nMCP 서버 연결
 
