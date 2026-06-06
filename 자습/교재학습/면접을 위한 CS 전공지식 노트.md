@@ -2,7 +2,69 @@
 
 ---
 # Chapter 1. 디자인 패턴
+### 디자인 패턴
+프로그램을 설계할 때 발생했던 문제점들을 객체 간의 상호 관계 등을 이용하여 해결할 수 있도록
+하나의 **규약** 형태로 만들어 놓은 것
 
+### **싱글톤 패턴**
+하나의 클래스에 오직 하나의 인스턴스만 가지는 패턴
+DB 연결 모듈에 많이 사용
+인스턴스 생성 비용이 줄어들지만 의존성이 높아진다는 단점
+
+###### DB 연결 모듈
+로직은 대충 'DB 인스턴스가 없으면 생성, 있으면 그거 씀'
+
+###### Java에서의 싱글톤 패턴
+```java
+class Singleton {
+	private static class singleInstanceHolder {
+		private static final Singleton INSTANCE = new Singleton();
+	}
+	public static Singleton getInstance() {
+		return singleInstanceHolder.INSTANCE;
+	}
+}
+
+public class HelloWorld {
+	public static void main(String[] args) {
+		Singleton a = Singleton.getInstance();
+		Singleton b = Singleton.getInstance();
+		System.out.println(a.hashCode());
+		System.out.println(b.hashCode());
+		if (a == b) {
+			System.out.println(true);
+		}
+	}
+}
+/*
+705927765
+705927765
+true
+*/
+```
+
+###### 싱글턴 패턴의 단점
+TDD에 걸림돌이 됨
+단위 테스트를 주로 하는데, 단위 테스트는 테스트가 서로 독립적이고 어떤 순서로든 실행할 수 있어야 함
+-> 싱글턴은 '독립적인' 인스턴스를 만들기 어려움
+
+###### 의존성 주입
+모듈 간의 결합을 강하게 만들 수 있는 싱글톤
+의존성 주입(DI)을 통해 모듈 간 결합을 조금 더 느슨하게 만들어 해결 가능
+
+메인 모듈이 직접 다른 하위 모듈에 대한 의존성을 주기보다는,
+중간에 의존성 주입자가 이 부분을 가로채 메인 모듈이 간접적으로 의존성을 주입하는 방식
+이를 통해 메인 모듈은 하위 모듈에 대한 의존성이 떨어지게 됨(=디커플링)
+
+###### 의존성 주입의 장점
+모듈들이 쉽게 교체할 수 있는 구조가 됨,
+테스팅 쉽고 마이그레이션 수월
+구현 시 추상화, 구현체 추가되어 앱 의존성 방향이 일관, 앱을 쉽게 추론 가능, 모듈 간 관계 불명확해짐
+
+###### 의존성 주입의 단점
+클래스 수가 늘어나 복잡성 증가, 약간의 런타임 패널티
+
+### **팩토리 패턴**
 
 
 ---
