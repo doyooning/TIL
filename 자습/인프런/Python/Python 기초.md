@@ -209,3 +209,44 @@ class PopulationStatistics:
 # PopulationStatistics.getPopulation()
 ```
 
+### 상속
+접근 제어자 중 public은 상속되지만 private은 상속되지 않음
+
+###### 생성자 호출과 속성 상속
+Python에서 자식 클래스가 부모 클래스의 속성을 사용하려면
+`__init__`메서드 내에서 부모의 `__init__`을 강제로 호출해주어야 함
+
+###### 오버라이딩
+부모 클래스에 정의된 메서드를 자식 클래스에서 상황에 맞게 재정의하여 사용
+
+###### 다중 상속
+Python은 다중 상속을 지원함
+하나의 자식 클래스가 여러 부모 클래스를 상속받을 수 있음
+
+###### 추상 클래스
+자식 클래스에서 반드시 특정 메서드를 구현하도록 강제하는 클래스
+```python
+from abc import ABCMeta
+from abc import abstractmethod
+
+class Calculator(metaclass=ABCMeta):
+
+	def __init__(self):
+		pass
+		
+	@abstractmethod
+	def add(self):
+		pass
+	
+	@abstactmethod
+	def sub(self):
+		pass
+	
+```
+
+abs 모듈과 데코레이터를 사용해 구현
+
+###### super()
+부모 클래스 객체를 가리키는 키워드
+`__init__` 등 부모의 메서드를 더 간결하고 안전하게 호출
+
