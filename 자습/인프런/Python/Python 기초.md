@@ -104,7 +104,8 @@ def fun(x, y):
 전역 변수/지역 변수
 -> 프로그래밍 언어 동일
 
-# 객체 지향 프로그래밍
+# 2. 프로그래밍
+### 객체 지향 프로그래밍
 OOP(Object-Oriented Programming)
 
 ### 객체와 클래스
@@ -249,4 +250,248 @@ abs 모듈과 데코레이터를 사용해 구현
 ###### super()
 부모 클래스 객체를 가리키는 키워드
 `__init__` 등 부모의 메서드를 더 간결하고 안전하게 호출
+
+### 모듈 (Module)
+관련된 함수나 변수들을 하나의 파이썬 파일(.py)로 묶어 부품처럼 사용하는 것
+`import [파일명]`을 통해 모듈 전체를 가져오거나, 
+`from [파일명] import [함수명]`을 사용하여 필요한 기능만 선택적으로 가져올 수 있음
+이미 작성된 검증된 코드를 재사용하여 효율적인 프로그래밍이 가능
+
+```python
+# cooking.py에 함수들이 구현되어 있을 때
+# module
+import cooking
+cooking.makeJjajang()
+cooking.makePasta()
+```
+
+```python
+# module
+from cooking import makeJjajang
+from cooking import makePasta
+```
+
+### 패키지(Package)
+여러 개의 모듈을 디렉토리(폴더) 단위로 체계적으로 관리하는 방법
+패키지로 인식되려면 디렉토리 안에 반드시 `__init__.py`라는 이름의 초기화 파일이 있어야 함
+규모가 큰 프로젝트에서 파일들을 계층적으로 정리할 수 있음
+
+#### 패키지 추가 및 활용
+###### 경로 관리
+기본적으로 같은 경로에 있는 모듈과 패키지만 불러올 수 있지만, 
+파이썬이 설치된 경로의 `site-packages` 폴더에 패키지를 넣으면 프로젝트 경로에 상관없이 어디서든 자유롭게 불러와 사용할 수 있음
+
+###### 핵심 요약
+`sys` 모듈의 `path`를 통해 파이썬이 모듈을 찾는 경로를 확인할 수 있으며, 이를 활용해 개발 환경을 유연하게 설정할 수 있음
+
+### 예외 처리
+#### 예외(Exception)
+프로그램 실행 중에 발생하는 오류로, 개발자가 사전에 예측하여 대응할 수 있는 상황을 의미
+에러(Error)와는 다름
+
+###### 기본적인 예외 처리
+```python
+try:
+	userData = int(input())
+	result = int(10 / userData)
+	
+except ZeroDivisionError as e:
+	print('0으로 나눌 수 없음: {0}'.format(e))
+
+except Exception as e:
+	print('예외 발생: {0}'.format(e))
+
+else:
+	print('완료')
+	
+finally:
+	print('프로그램 종료')	
+```
+`try`, `except` 구문을 사용하여 처리
+`else`: 예외가 발생하지 않았을 때 실행
+`finally`: 예외 발생 여부와 상관없이 항상 실행, 주로 외부 자원 해제(DB)에 사용됨
+
+###### Exception 클래스
+모든 예외의 최상위 클래스
+
+###### 사용자 정의 예외 클래스
+`Exception` 클래스를 상속받아 개발자가 직접 자신만의 예외를 정의하고, 
+`raise` 키워드를 통해 필요한 상황에서 예외를 발생시킴
+
+```python
+class MyException(Exception):
+	def __init__(self, e):
+		super().__init__('{0}으로 나눌 수 없습니다.'.format(e))
+		
+def division(x, y):
+	if y != 0:
+		return x / y
+	else:
+		raise MyException(y)
+
+try:
+	numX = int(input())
+	numY = int(input())
+	result = division(numX, numY)
+	print('result : {0}'.format(result))
+	
+except MyException as e:
+	print('예외 발생: {0}'.format(e))
+	
+else:
+	print('정상 실행')
+	
+finally:
+	print('자원 해제')
+```
+
+### 데이터 입출력
+#### 파일 입출력의 기초
+###### 기본 절차
+파일을 다룰 때는 `열기(open) → 읽기(read) 또는 쓰기(write) → 닫기(close)` 과정을 반드시 거쳐야 함
+
+###### 외부 자원 관리
+파일은 파이썬 내부 자원이 아닌 외부 자원이므로, 작업 후에는 `close()` 함수를 통해 메모리 누수를 방지하고 자원을 반납해야 함
+
+#### 파일 모드
+- `r` (Read): 읽기 전용 모드
+- `w` (Write): 쓰기 전용 모드 (파일이 존재하면 기존 내용을 덮어씀)
+- `a` (Append): 추가 모드 (기존 내용 뒤에 새로운 데이터를 덧붙임)
+- `x`: 파일이 이미 존재하면 예외(IOError) 발생
+
+```python
+# 파일 쓰기(열기 -> 쓰기 -> 닫기)
+f = open('C:/...testFile.txt', 'w')
+f.write('hello python')
+f.close()
+
+# 파일 읽기(열기 -> 읽기 -> 닫기)
+f = open('C:/...testFile.txt', 'r')
+print('f.read(): {0}'.format(f.read()))
+f.close()
+
+# 쓰기 전용
+f = open('C:/...testFile.txt', 'a')
+f.write('HELLO PYTHON')
+f.close()
+
+# 이미 존재하면 예외(IOError) 발생
+f = open('C:/...testFile.txt', 'x')
+f.write('HELLO PYTHON')
+f.close()
+```
+
+#### 텍스트 파일 읽기 및 쓰기 함수
+- `with open(...) as f:` 구문: 
+  `close()`를 명시적으로 호출할 필요 없이 파이썬이 **알아서 파일을 닫아주어** 매우 편리
+
+- 리스트 데이터 처리:
+    - `write(lines)`: 리스트 형태의 데이터를 파일에 기록할 때 유용함
+    - `readlines()`: 파일의 모든 라인을 읽어 리스트로 반환
+    - `readline()`: 파일에서 한 행씩 읽어오기
+
+파이썬 실행 파일을 **관리자 권한**으로 실행해야 특정 경로의 파일을 정싱적으로 실행하거나 읽기 가능
+
+### 네트워크 통신
+#### 네트워크 통신 기초
+
+###### 클라이언트와 서버 구조
+- 서버(Server): 
+  서비스를 제공하는 쪽, 여러 클라이언트 요청을 처리
+- 클라이언트(Client): 
+  서버에 요청을 보내고 응답을 받는 쪽
+- 리스너(Listener): 
+  서버에서 클라이언트의 접속 요청을 기다리는 역할 (길목을 지키는 문지기 비유 가능)
+- 소켓(Socket): 
+  클라이언트와 서버 양쪽 모두에서 반드시 생성되어야 하는 통신 장치
+
+###### 통신 과정 요약
+1. 서버는 소켓을 바인딩(binding)하여 IP와 포트 번호에 연결
+2. 서버는 리스너로 클라이언트 접속 요청 대기
+3. 클라이언트가 서버 IP와 포트로 접속 시도 (connect)
+4. 서버는 accept 메서드로 클라이언트 접속 수락
+5. 데이터 송수신 (send, recv 메서드 사용)
+6. 작업 완료 후 자원 해제 (소켓 닫기)
+
+#### 메시지 송수신 구현
+###### 메시지 송수신 실습 개념 (파이썬 예시 기반)
+
+| 단계          | 설명                                            |
+| ----------- | --------------------------------------------- |
+| 소켓 임포트      | `import socket`으로 소켓 라이브러리 호출                 |
+| 서버 소켓 생성    | `socket.socket()`으로 소켓 생성, IP와 포트 바인딩, 리스너 대기 |
+| 클라이언트 소켓 생성 | 서버 IP, 포트로 연결 시도 (`connect()`)                |
+| 메시지 송신      | 클라이언트가 `send()`로 텍스트 메시지 전송 (바이너리 인코딩 필요)     |
+| 메시지 수신      | 서버가 `recv()`로 메시지 수신 후 출력                     |
+| 응답 송신       | 서버가 다시 `send()`로 응답 메시지 전송                    |
+| 클라이언트 수신    | 클라이언트가 응답 메시지 수신 후 출력                         |
+| 소켓 종료       | 양쪽 모두 작업 완료 후 소켓 자원 해제 (`close()`)            |
+
+- 메시지는 바이너리 형태로 변환하여 전송 (`b'Hello'`)
+- 작은 따옴표나 특수문자는 이스케이프 문자(`\`)로 처리
+
+###### 파일 송수신 방법 (이미지, mp3 등 바이너리 파일)
+
+| 역할    | 주요 작업                                                                             |
+| ----- | --------------------------------------------------------------------------------- |
+| 클라이언트 | 1. 서버 IP와 포트로 연결  <br>2. 전송할 파일을 바이너리(`rb`) 모드로 열기  <br>3. 파일 데이터를 소켓을 통해 서버로 전송  |
+| 서버    | 1. 클라이언트 접속 수락  <br>2. 파일 받을 준비 (`wb` 바이너리 쓰기 모드)  <br>3. 클라이언트로부터 받은 데이터를 파일로 저장 |
+
+- 파일 송수신 시 텍스트가 아닌 **바이너리 모드로 열고 읽기/쓰기** 해야 함
+- 여러 클라이언트가 접속 가능 (서버 리스너 백로그 숫자 설정, 예: 5명)
+- 클라이언트가 보낸 파일은 서버 지정 경로에 `파일명_버전번호` 형식으로 저장하여 중복 방지
+- 전송 완료 후 소켓 종료
+
+### DB와 SQLite
+Python 기본 내장 경량 DB인 SQLite
+SQLite3 모듈을 import하면 바로 사용 가능
+
+```
+Connection Open
+	  |
+  Cursor Open
+	  |
+   DB Work
+      |
+  Cursor Close
+	  |
+Connection Close
+```
+
+```python
+import sqlite3
+conn = sqlite3.connect('C:/.../database.db')
+cursor = conn.cursor()
+cursor.execute("INSERT INTO T_STU_INFO(ST_NAME, ST_CODE, ST_MAJ) VALUES('홍길동', 'ST001', '디자인')")
+
+id = cursor.lastrowid
+print(id)
+conn.commit() # 변경 사항 저장 필요(트랜잭션 관련)
+
+cursor.execute("SELECT * FROM T_STU_INFO")
+rows = cursor.fetchAll()
+for r in rows:
+	print('ST_NAME: {0}, ST_CODE: {1}, ST_MAJ: {2}'.format(r[0], r[1], r[2]))
+
+cursor.close()
+conn.close()
+```
+
+###### MySQL과 연동하기
+```python
+import pymysql
+conn = pymysql.connect(host='localhost', port=3306, user='root', password='password', db='student', charset='utf8')
+cursor = conn.cursor()
+
+cursor.execute("CREATE TABLE T_STU_INFO(ST_NAME CHAR(32), ST_CODE CHAR(32), ST_MAJ CHAR(32))")
+
+cursor.close()
+conn.close()
+```
+
+`pymysql` 모듈 설치 방법
+`pip list` 입력, `pymysql` 없으면 install 가능
+`pip3 install PyMySQL` -> `pip3 list` 확인
+
+
 
