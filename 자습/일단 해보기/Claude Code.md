@@ -8,19 +8,23 @@ cowork 기능이 추가되어 한번 사용해봐야 할 듯
 
 # 터미널 명령어
 모든 권한 프롬프트 자동 승인
-```
+```bash
 claude --dangerously-skip-permissions
 ```
 
-가장 최근 세션 이어서 실행
+또는:
+```bash
+claude --permission-mode bypassPermissions
 ```
+
+가장 최근 세션 이어서 실행
+```bash
 claude -c
 ```
 
 # Skills
 참고자료:
 https://exultant-principle-9c5.notion.site/claude-34691cb23c4d806db398fd9fe5e1c364
-
 
 # 하네스 프로그래밍
 Claude가 프로젝트 안에서 어떤 팀처럼 일할지 설계하는 구조
