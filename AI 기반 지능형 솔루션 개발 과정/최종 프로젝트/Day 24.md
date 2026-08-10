@@ -18,7 +18,7 @@
 `ssh -p 2222 doyoon@116.42.115.24`
 doyoon / doyoon1123
 
-컨테이너: gpu_user16
+컨테이너: gpu_user06
 
 
 얼굴 인식은 OpenCV 라이브러리 활용하는 게 상당히 가볍고 성능이 좋다
