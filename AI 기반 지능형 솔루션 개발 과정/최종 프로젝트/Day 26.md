@@ -1,32 +1,118 @@
 #KDT 
 
 ---
-### 프로젝트 주제
-무엇을 제공하나?
-학생들이 각자의 자리에 앉아있는지를 탐지 식별
-주 사용자인 관리자 입장에서 학생들 현황을 확인하는 데 어려움이 있다(직접 다 확인을 해야 됨)
-책상에 각 학생들 고유의 자리가 할당되어 있고 이를 페이스 디텍팅으로 해당하는 사람의 자리에 해당하는 사람이 위치해있는지를 확인할 것임
+# 검색 기능 설계
+LLM은 RPA까지 연결해본다
 
-### 예상 사용 시나리오
-강의실로 들어와서 자기 자리에 앉음
-
-들어오는 위치에 하나
-전체 자리가 잘 보일 수 있는 위치에 하나
+### 화면 구성
+FastAPI에서 검색하는 기능을 만들어놓고 연결
+간단하게 가운데에 자연어 입력하는 검색바 만들기?
 
 
-### 상태 판단
-재석 / 부재 / 잘못된 자리
+### 로직 설계
+
+`llama-server + Gemma → Structured Query → FastAPI Validation → MongoDB`
 
 
-### MVP 단계
-특정인을 식별해서, 이 사람이 올바른 자신의 자리에 앉아있는지 까지가 구현이 되어야 함
+```
+LLM의 책임
+자연어 이해
+       ↓
+검색 의도 + 조건 추출
+       ↓
+JSON 생성
+       ↓
+끝
+
+FastAPI의 책임
+JSON 검증
+       ↓
+권한 검사
+       ↓
+MongoDB Query 생성
+       ↓
+DB 조회
+       ↓
+결과 반환
+```
 
 
-### 최종 결과물
-강의실 단위의 학생 관리가 될 수 있어야 함
+# LLM과 업무 자동화
+```
+사용자
+  │
+  │ "오늘 결석한 학생 목록 확인해서
+  │  담당자에게 보고서 보내줘"
+  ▼
+FastAPI / Chat UI
+  │
+  ▼
+n8n
+  │
+  ├── LLM(Gemma / llama-server)
+  │      └─ 의도 분석
+  │      └─ 필요한 Tool 선택
+  │      └─ 파라미터 생성
+  │
+  ├── FastAPI 조회 Tool
+  │      └─ 학생 상태 조회
+  │
+  ├── 보고서 생성 Workflow
+  │
+  ├── 메일/Slack 등 전달 Workflow
+  │
+  └── 필요 시 관리자 승인
+```
 
-상태 판단: 재석 / 부재 / 잘못된 자리 / 재실 
+|구성요소|책임|
+|---|---|
+|**Gemma**|사용자의 자연어 의도 해석|
+|**llama-server**|Gemma 추론 API 제공|
+|**n8n**|업무 순서 결정 및 Workflow 실행|
+|**FastAPI**|프로젝트의 실제 비즈니스 API|
+|**MongoDB**|학생/상태/출결 데이터|
+|**RPA**|외부 서비스에서 실제 작업 수행|
+**n8n이 MongoDB에 직접 들어가는 구조보다는 FastAPI API를 Tool로 제공하는 구조**를 권합니다.
 
+```
+O
 
+n8n AI Agent
+   │
+   ├─ get_absent_students()
+   ├─ get_student_status()
+   ├─ create_attendance_report()
+   └─ request_notification()
+          │
+          ▼
+       FastAPI
+          │
+          ▼
+       MongoDB
+```
+
+```
+get_student_status
+    student_id
+    date
+
+get_absent_students
+    class_id
+    date
+    period
+
+get_wrong_seat_students
+    class_id
+    date
+    period
+
+create_attendance_report
+    class_id
+    date
+
+send_attendance_report
+    report_id
+    recipient
+```
 
 
