@@ -7,6 +7,7 @@ Obsidian을 통해 작성 및 관리되고 있습니다.
 
 - [AI 기반 지능형 솔루션 개발 과정](#ai-기반-지능형-솔루션-개발-과정)
 - [CCAR-F 자격증](#ccar-f-자격증)
+- [CCDV-F 자격증](#ccdv-f-자격증)
 - [신세계I&C교육](#신세계ic교육)
 - [메모](#메모)
 - [오답노트](#오답노트)
@@ -27,6 +28,11 @@ RPA, 컴퓨터 비전 등 AI 기반 지능형 솔루션 개발 과정에서 학�
 
 Anthropic **Claude Certified Architect, Foundations(CCA-F / CCAR-F)** 시험 대비 노트를 정리하는 공간입니다.
 에이전트 아키텍처, 도구·MCP 설계, Claude Code 설정과 워크플로우, 프롬프트 엔지니어링, 컨텍스트 관리 등 5개 출제 도메인별 노트가 포함됩니다.
+
+## CCDV-F 자격증
+
+Anthropic **Claude Certified Developer – Foundations(CCDV-F)** 시험 대비 노트를 정리하는 공간입니다.
+Claude API 메커니즘, 애플리케이션 설계·통합, 모델 선택과 최적화, 에이전트와 워크플로, 프롬프트·컨텍스트 엔지니어링, 도구·MCP, 보안·안전, Claude Code, 평가·디버깅 등 8개 출제 도메인별 노트가 포함됩니다.
 
 ## 신세계I&C교육
 
