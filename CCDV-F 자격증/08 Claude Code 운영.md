@@ -120,17 +120,17 @@ claude -p --output-format json "query"
 
 ## 7. 알아두면 좋은 슬래시 명령
 
-| 명령 | 용도 |
-| --- | --- |
-| `/init` | CLAUDE.md 생성 |
-| `/memory`, `/context` | 메모리 편집·컨텍스트 사용량 확인 |
-| `/compact`, `/clear` | 압축·초기화 |
-| `/permissions` | 권한 규칙 관리 |
-| `/mcp` | MCP 서버 상태·인증 |
-| `/model`, `/effort` | 모델·추론 강도 |
-| `/status`, `/doctor` | 설정 확인·진단 |
-| `/code-review`, `/security-review`, `/diff` | 검토 |
-| `/plan` | 계획 모드 |
+| 명령                                          | 용도                 |
+| ------------------------------------------- | ------------------ |
+| `/init`                                     | CLAUDE.md 생성       |
+| `/memory`, `/context`                       | 메모리 편집·컨텍스트 사용량 확인 |
+| `/compact`, `/clear`                        | 압축·초기화             |
+| `/permissions`                              | 권한 규칙 관리           |
+| `/mcp`                                      | MCP 서버 상태·인증       |
+| `/model`, `/effort`                         | 모델·추론 강도           |
+| `/status`, `/doctor`                        | 설정 확인·진단           |
+| `/code-review`, `/security-review`, `/diff` | 검토                 |
+| `/plan`                                     | 계획 모드              |
 
 ## 8. MCP 연결
 
