@@ -283,3 +283,21 @@ uip codedagent publish --my-workspace
 ```
 이후 브라우저 창에서 환경변수 등 설정
 
+기존 프로세스 재배포시:
+```powershell
+uip codedagent deploy --my-workspace
+```
+
+### 작업 실행
+로컬에서 실행:
+```powershell
+uip codedagent run agent '{"request": "..."}'
+```
+
+배포 후 실행:
+```powershell
+uip codedagent invoke agent '{"request": "..."}'
+```
+invoke는 작업을 시작만 하고 바로 모니터링 링크를 돌려줌
+결과는 링크에서 확인
+
