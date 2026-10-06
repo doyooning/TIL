@@ -7,6 +7,20 @@ uv 사용 권장
 
 ### 가상환경 설정
 
+*uv가 설치되어 있지 않다면 uv부터 설치 !!*
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+설치 후 터미널 및 IDE 재시작
+
+```powershell
+uv --version
+```
+
+설치 확인
+
 ```powershell
 uv venv --python 3.13
 
