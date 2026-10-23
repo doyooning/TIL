@@ -198,8 +198,6 @@ Maestro Case 구성
 
 진입 규칙, 완료 규칙, 종료 규칙을 설정
 
-
-
 # Session 6
 ### Maestro Flow
 개발자 친화적인 플로우를 구성하기 용이함
